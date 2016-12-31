@@ -1,5 +1,5 @@
 {
-  "name": "test-server",
+  "name": "wordhub3-server",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -8,7 +8,7 @@
     "dev": "nodemon index",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Pavel Pomerantsev",
   "license": "ISC",
   "dependencies": {
     "babel-plugin-transform-async-to-generator": "6.8.0",
