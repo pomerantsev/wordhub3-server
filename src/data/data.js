@@ -152,6 +152,13 @@ export async function getAllRepetitions (currentDate) {
       GROUP BY planned_day
       ORDER BY planned_day ASC
       LIMIT 1
+    ),
+    first_available_day_after_last_completed_day AS (
+      SELECT planned_day
+      FROM repetitions
+      WHERE planned_day BETWEEN (SELECT planned_day FROM last_completed_day) + 1 AND (SELECT planned_day FROM last_completed_day) + (SELECT DATE_PART('day', '${currentDate}'::timestamp - (SELECT max_actual_date FROM last_completed_day)::timestamp))
+      ORDER BY planned_day ASC
+      LIMIT 1
     )
     SELECT r.id, r.flashcard_id, r.seq, r.planned_day, r.actual_date,
       (
@@ -159,12 +166,15 @@ export async function getAllRepetitions (currentDate) {
         WHEN (SELECT planned_day FROM last_completed_day) IS NULL
           AND (SELECT DATE_PART('day', '${currentDate}'::timestamp - '${SEED_DATE}'::timestamp)) >= (SELECT planned_day FROM first_day)
           AND r.planned_day = (SELECT planned_day FROM first_day)
+          AND (r.actual_date IS NULL OR r.actual_date >= '${currentDate}')
           THEN true
         WHEN r.planned_day = (SELECT planned_day FROM last_completed_day)
           AND (SELECT max_actual_date FROM last_completed_day) >= '${currentDate}'
+          AND r.actual_date = (SELECT max_actual_date FROM last_completed_day)
           THEN true
-        WHEN r.planned_day BETWEEN (SELECT planned_day FROM last_completed_day) + 1 AND (SELECT planned_day FROM last_completed_day) + 1 + (SELECT DATE_PART('day', '${currentDate}'::timestamp - (SELECT max_actual_date FROM last_completed_day)::timestamp))
+        WHEN r.planned_day = (SELECT planned_day FROM first_available_day_after_last_completed_day)
           AND (r.actual_date IS NULL OR r.actual_date >= '${currentDate}')
+          AND (SELECT max_actual_date FROM last_completed_day) < '${currentDate}'
           THEN true
         ELSE false
         END
