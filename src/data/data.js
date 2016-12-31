@@ -114,9 +114,9 @@ export async function createFlashcard (currentDate) {
       LIMIT 1;
       IF rec IS NULL
       THEN
-        RETURN (SELECT DATE_PART('day', '${currentDate}'::timestamp - '${SEED_DATE}'::timestamp));
+        RETURN (SELECT DATE_PART('day', '${escape(currentDate)}'::timestamp - '${SEED_DATE}'::timestamp));
       ELSE
-        RETURN rec.planned_day + (SELECT DATE_PART('day', '${currentDate}'::timestamp - rec.actual_date::timestamp));
+        RETURN rec.planned_day + (SELECT DATE_PART('day', '${escape(currentDate)}'::timestamp - rec.actual_date::timestamp));
       END IF;
       END;
       $$
@@ -156,7 +156,7 @@ export async function getAllRepetitions (currentDate) {
     first_available_day_after_last_completed_day AS (
       SELECT planned_day
       FROM repetitions
-      WHERE planned_day BETWEEN (SELECT planned_day FROM last_completed_day) + 1 AND (SELECT planned_day FROM last_completed_day) + (SELECT DATE_PART('day', '${currentDate}'::timestamp - (SELECT max_actual_date FROM last_completed_day)::timestamp))
+      WHERE planned_day BETWEEN (SELECT planned_day FROM last_completed_day) + 1 AND (SELECT planned_day FROM last_completed_day) + (SELECT DATE_PART('day', '${escape(currentDate)}'::timestamp - (SELECT max_actual_date FROM last_completed_day)::timestamp))
       ORDER BY planned_day ASC
       LIMIT 1
     )
@@ -164,17 +164,17 @@ export async function getAllRepetitions (currentDate) {
       (
         CASE
         WHEN (SELECT planned_day FROM last_completed_day) IS NULL
-          AND (SELECT DATE_PART('day', '${currentDate}'::timestamp - '${SEED_DATE}'::timestamp)) >= (SELECT planned_day FROM first_day)
+          AND (SELECT DATE_PART('day', '${escape(currentDate)}'::timestamp - '${SEED_DATE}'::timestamp)) >= (SELECT planned_day FROM first_day)
           AND r.planned_day = (SELECT planned_day FROM first_day)
-          AND (r.actual_date IS NULL OR r.actual_date >= '${currentDate}')
+          AND (r.actual_date IS NULL OR r.actual_date >= '${escape(currentDate)}')
           THEN true
         WHEN r.planned_day = (SELECT planned_day FROM last_completed_day)
-          AND (SELECT max_actual_date FROM last_completed_day) >= '${currentDate}'
+          AND (SELECT max_actual_date FROM last_completed_day) >= '${escape(currentDate)}'
           AND r.actual_date = (SELECT max_actual_date FROM last_completed_day)
           THEN true
         WHEN r.planned_day = (SELECT planned_day FROM first_available_day_after_last_completed_day)
-          AND (r.actual_date IS NULL OR r.actual_date >= '${currentDate}')
-          AND (SELECT max_actual_date FROM last_completed_day) < '${currentDate}'
+          AND (r.actual_date IS NULL OR r.actual_date >= '${escape(currentDate)}')
+          AND (SELECT max_actual_date FROM last_completed_day) < '${escape(currentDate)}'
           THEN true
         ELSE false
         END
@@ -192,8 +192,8 @@ export async function memorizeRepetition (id, date) {
     BEGIN;
 
     UPDATE repetitions
-    SET actual_date = '${date}'
-    WHERE id = ${id};
+    SET actual_date = '${escape(date)}'
+    WHERE id = ${Number(id)};
 
     DROP FUNCTION IF EXISTS add_repetition_if_necessary();
 
@@ -204,7 +204,7 @@ export async function memorizeRepetition (id, date) {
       BEGIN
       SELECT * INTO rec
       FROM repetitions AS r
-      WHERE r.id = ${id};
+      WHERE r.id = ${Number(id)};
       IF rec.seq = 1 THEN
         INSERT INTO repetitions
         (flashcard_id, seq, planned_day)
