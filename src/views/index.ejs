@@ -34,7 +34,7 @@
   <div
       style="display: flex;">
     <div
-        style="padding: 10px; width: 20vw;">
+        style="padding: 10px; width: 40vw;">
       <form
           action="/flashcards"
           method="POST">
@@ -43,17 +43,42 @@
             name="actualDate"
             value="<%= date %>">
         <input
+            style="width: 50px;"
+            name="frontText">
+        <input
             type="submit"
             value="Create Flashcard">
       </form>
       <ul>
         <% for (const flashcard of flashcards) { %>
-          <li><%= flashcard.id %></li>
+          <li>
+            <%= flashcard.id %>
+            <form
+                style="display: inline;"
+                action="/update-flashcard"
+                method="POST">
+              <input
+                  type="hidden"
+                  name="actualDate"
+                  value="<%= date %>">
+              <input
+                  type="hidden"
+                  name="id"
+                  value="<%= flashcard.id %>">
+              <input
+                  style="width: 50px;"
+                  name="frontText"
+                  value="<%= flashcard.frontText %>">
+              <input
+                  type="submit"
+                  value="Update">
+            </form>
+          </li>
         <% } %>
       </ul>
     </div>
     <div
-        style="padding: 10px; width: 80vw;">
+        style="padding: 10px; width: 60vw;">
       <table
           style="border-collapse: collapse;">
         <tr>

@@ -85,15 +85,15 @@ async function getCurrentDayNumber () {
 
 export async function getAllFlashcards () {
   const rawData = (await query(`
-    SELECT id
+    SELECT id, front_text
     FROM flashcards
     ORDER BY id
   `)).rows;
 
-  return rawData;
+  return camelizeKeys(rawData);
 }
 
-export async function createFlashcard (currentDate) {
+export async function createFlashcard (currentDate, frontText) {
   const MIN_DATE_DIFF = 1;
   const MAX_DATE_DIFF = 3;
 
@@ -124,7 +124,9 @@ export async function createFlashcard (currentDate) {
 
     WITH inserted_flashcard AS (
       INSERT INTO flashcards
-      DEFAULT VALUES
+      (front_text)
+      VALUES
+      ('${escape(frontText)}')
       RETURNING id
     )
     INSERT INTO repetitions
@@ -133,6 +135,14 @@ export async function createFlashcard (currentDate) {
     FROM inserted_flashcard;
 
     COMMIT;
+  `);
+}
+
+export async function updateFlashcard (id, frontText) {
+  await query(`
+    UPDATE flashcards
+    SET front_text = '${escape(frontText)}'
+    WHERE id = ${Number(id)};
   `);
 }
 
