@@ -122,17 +122,31 @@ export async function createFlashcard (currentDate, frontText) {
       $$
       LANGUAGE plpgsql;
 
-    WITH inserted_flashcard AS (
-      INSERT INTO flashcards
-      (front_text)
-      VALUES
-      ('${escape(frontText)}')
-      RETURNING id
-    )
-    INSERT INTO repetitions
-    (flashcard_id, seq, planned_day)
-    SELECT id, 1, get_flashcard_creation_day() + ${MIN_DATE_DIFF} + floor(random() * ${MAX_DATE_DIFF - MIN_DATE_DIFF + 1})
-    FROM inserted_flashcard;
+    DROP FUNCTION IF EXISTS insert_flashcard();
+
+    CREATE OR REPLACE FUNCTION insert_flashcard() RETURNS void AS $$
+      DECLARE
+        inserted_flashcard_id integer;
+      BEGIN
+        INSERT INTO flashcards
+        (front_text)
+        VALUES
+        ('${escape(frontText)}')
+        RETURNING id
+        INTO inserted_flashcard_id;
+
+        INSERT INTO repetitions
+        (flashcard_id, seq, planned_day)
+        VALUES (inserted_flashcard_id, 1, get_flashcard_creation_day() + ${MIN_DATE_DIFF} + floor(random() * ${MAX_DATE_DIFF - MIN_DATE_DIFF + 1}));
+
+        INSERT INTO changes
+        (type, action, updates)
+        VALUES
+        ('flashcard', 'create', json_build_object('id', inserted_flashcard_id, 'front_text', '${escape(frontText)}'));
+      END;
+    $$ LANGUAGE plpgsql;
+
+    SELECT insert_flashcard();
 
     COMMIT;
   `);
@@ -140,9 +154,18 @@ export async function createFlashcard (currentDate, frontText) {
 
 export async function updateFlashcard (id, frontText) {
   await query(`
+    BEGIN;
+
     UPDATE flashcards
     SET front_text = '${escape(frontText)}'
     WHERE id = ${Number(id)};
+
+    INSERT INTO changes
+    (type, action, updates)
+    VALUES
+    ('flashcard', 'update', json_build_object('id', ${Number(id)}, 'front_text', '${escape(frontText)}'));
+
+    COMMIT;
   `);
 }
 
