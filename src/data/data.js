@@ -142,7 +142,7 @@ export async function createFlashcard (currentDate, frontText) {
         INSERT INTO changes
         (type, action, updates)
         VALUES
-        ('flashcard', 'create', json_build_object('id', inserted_flashcard_id, 'front_text', '${escape(frontText)}'));
+        ('flashcard', 'create', jsonb_build_object('id', inserted_flashcard_id, 'front_text', '${escape(frontText)}'));
       END;
     $$ LANGUAGE plpgsql;
 
@@ -163,7 +163,7 @@ export async function updateFlashcard (id, frontText) {
     INSERT INTO changes
     (type, action, updates)
     VALUES
-    ('flashcard', 'update', json_build_object('id', ${Number(id)}, 'front_text', '${escape(frontText)}'));
+    ('flashcard', 'update', jsonb_build_object('id', ${Number(id)}, 'front_text', '${escape(frontText)}'));
 
     COMMIT;
   `);
