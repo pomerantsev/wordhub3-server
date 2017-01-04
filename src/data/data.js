@@ -139,7 +139,7 @@ export async function createFlashcard (currentDate, frontText) {
         (flashcard_id, seq, planned_day)
         VALUES (inserted_flashcard_id, 1, get_flashcard_creation_day() + ${MIN_DATE_DIFF} + floor(random() * ${MAX_DATE_DIFF - MIN_DATE_DIFF + 1}));
 
-        INSERT INTO changes
+        INSERT INTO events
         (type, action, updates)
         VALUES
         ('flashcard', 'create', jsonb_build_object('id', inserted_flashcard_id, 'front_text', '${escape(frontText)}'));
@@ -160,7 +160,7 @@ export async function updateFlashcard (id, frontText) {
     SET front_text = '${escape(frontText)}'
     WHERE id = ${Number(id)};
 
-    INSERT INTO changes
+    INSERT INTO events
     (type, action, updates)
     VALUES
     ('flashcard', 'update', jsonb_build_object('id', ${Number(id)}, 'front_text', '${escape(frontText)}'));
