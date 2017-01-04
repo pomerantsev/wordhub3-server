@@ -137,6 +137,9 @@ export async function createFlashcard (currentDate, frontText) {
     CREATE OR REPLACE FUNCTION insert_flashcard() RETURNS void AS $$
       DECLARE
         inserted_flashcard_id integer;
+        inserted_repetition_id integer;
+        seq integer := 1;
+        planned_day integer := get_flashcard_creation_day() + ${MIN_DATE_DIFF} + floor(random() * ${MAX_DATE_DIFF - MIN_DATE_DIFF + 1});
       BEGIN
         INSERT INTO flashcards
         (front_text)
@@ -147,12 +150,19 @@ export async function createFlashcard (currentDate, frontText) {
 
         INSERT INTO repetitions
         (flashcard_id, seq, planned_day)
-        VALUES (inserted_flashcard_id, 1, get_flashcard_creation_day() + ${MIN_DATE_DIFF} + floor(random() * ${MAX_DATE_DIFF - MIN_DATE_DIFF + 1}));
+        VALUES (inserted_flashcard_id, seq, planned_day)
+        RETURNING id
+        INTO inserted_repetition_id;
 
         INSERT INTO events
         (type, action, updates)
         VALUES
         ('flashcard', 'create', jsonb_build_object('id', inserted_flashcard_id, 'front_text', '${escape(frontText)}'));
+
+        INSERT INTO events
+        (type, action, updates)
+        VALUES
+        ('repetition', 'create', jsonb_build_object('id', inserted_repetition_id, 'flashcard_id', inserted_flashcard_id, 'seq', seq, 'planned_day', planned_day));
       END;
     $$ LANGUAGE plpgsql;
 
@@ -238,25 +248,43 @@ export async function memorizeRepetition (id, date) {
     SET actual_date = '${escape(date)}'
     WHERE id = ${Number(id)};
 
+    INSERT INTO events
+    (type, action, updates)
+    VALUES
+    ('repetitions', 'update', jsonb_build_object('id', ${Number(id)}, 'actual_date', '${escape(date)}'));
+
     DROP FUNCTION IF EXISTS add_repetition_if_necessary();
 
     CREATE OR REPLACE FUNCTION add_repetition_if_necessary()
       RETURNS void
       AS $$
-      DECLARE rec record;
+      DECLARE
+        rec record;
+        inserted_repetition_id integer;
+        new_planned_day integer;
+        new_seq integer;
       BEGIN
-      SELECT * INTO rec
-      FROM repetitions AS r
-      WHERE r.id = ${Number(id)};
-      IF rec.seq = 1 THEN
-        INSERT INTO repetitions
-        (flashcard_id, seq, planned_day)
-        VALUES (rec.flashcard_id, 2, rec.planned_day + 5 + floor(random() * 6));
-      ELSIF rec.seq = 2 THEN
-        INSERT INTO repetitions
-        (flashcard_id, seq, planned_day)
-        VALUES (rec.flashcard_id, 3, rec.planned_day + 20 + floor(random() * 11));
-      END IF;
+        SELECT * INTO rec
+        FROM repetitions AS r
+        WHERE r.id = ${Number(id)};
+        new_planned_day := CASE
+          WHEN rec.seq = 1 THEN rec.planned_day + 5 + floor(random() * 6)
+          WHEN rec.seq = 2 THEN rec.planned_day + 20 + floor(random() * 11)
+          ELSE NULL
+          END;
+        new_seq := rec.seq + 1;
+        IF new_planned_day IS NOT NULL THEN
+          INSERT INTO repetitions
+          (flashcard_id, seq, planned_day)
+          VALUES (rec.flashcard_id, new_seq, new_planned_day)
+          RETURNING id
+          INTO inserted_repetition_id;
+
+          INSERT INTO events
+          (type, action, updates)
+          VALUES
+          ('repetition', 'create', jsonb_build_object('id', inserted_repetition_id, 'flashcard_id', rec.flashcard_id, 'seq', new_seq, 'planned_day', new_planned_day));
+        END IF;
       END;
       $$
       LANGUAGE plpgsql;
