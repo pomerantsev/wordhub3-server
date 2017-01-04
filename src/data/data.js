@@ -93,6 +93,16 @@ export async function getAllFlashcards () {
   return camelizeKeys(rawData);
 }
 
+export async function getAllEvents () {
+  const rawData = (await query(`
+    SELECT id, type, action, updates
+    FROM events
+    ORDER BY id
+  `)).rows;
+
+  return camelizeKeys(rawData);
+}
+
 export async function createFlashcard (currentDate, frontText) {
   const MIN_DATE_DIFF = 1;
   const MAX_DATE_DIFF = 3;
