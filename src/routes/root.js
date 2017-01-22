@@ -9,7 +9,6 @@ export default async function RootRoute (req, res) {
   res.render('index', {
     date,
     flashcards: await data.getAllFlashcards(),
-    repetitions: await data.getAllRepetitions(date),
-    events: await data.getAllEvents()
+    repetitions: await data.getAllRepetitions(date)
   });
 };

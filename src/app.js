@@ -20,6 +20,6 @@ app.get('/', RootRoute);
 
 app.post('/flashcards', bodyParser.urlencoded({extended: false}), CreateFlashcardRoute);
 app.post('/update-flashcard', bodyParser.urlencoded({extended: false}), UpdateFlashcardRoute);
-app.post('/repetitions/:id', bodyParser.urlencoded({extended: false}), PatchRepetitionRoute);
+app.post('/repetitions/:uuid', bodyParser.urlencoded({extended: false}), PatchRepetitionRoute);
 
 app.listen(process.env.PORT || 3000);
