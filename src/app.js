@@ -5,6 +5,7 @@ import RootRoute from './routes/root';
 import CreateFlashcardRoute from './routes/create-flashcard';
 import UpdateFlashcardRoute from './routes/update-flashcard';
 import PatchRepetitionRoute from './routes/patch-repetition-route';
+import GetDataRoute from './routes/get-data';
 
 import express from 'express';
 import bodyParser from 'body-parser';
@@ -21,5 +22,6 @@ app.get('/', RootRoute);
 app.post('/flashcards', bodyParser.urlencoded({extended: false}), CreateFlashcardRoute);
 app.post('/update-flashcard', bodyParser.urlencoded({extended: false}), UpdateFlashcardRoute);
 app.post('/repetitions/:uuid', bodyParser.urlencoded({extended: false}), PatchRepetitionRoute);
+app.get('/get-data', bodyParser.json(), GetDataRoute);
 
 app.listen(process.env.PORT || 3000);

@@ -85,12 +85,24 @@ async function getCurrentDayNumber () {
 
 export async function getAllFlashcards () {
   const rawData = (await query(`
-    SELECT uuid, front_text
+    SELECT uuid, front_text, updated_at
     FROM flashcards
     ORDER BY created_at
   `)).rows;
 
-  return camelizeKeys(rawData);
+  return rawData;
+}
+
+export async function getAllFlashcardsSimple (timestamp) {
+  const rawData = (await query(
+    `
+      SELECT uuid, front_text, (extract(epoch FROM created_at) * 1000) AS created_at, (extract(epoch FROM updated_at) * 1000) AS updated_at
+      FROM flashcards
+    ` + (Number(timestamp) ? `WHERE (extract(epoch FROM updated_at) * 1000) > ${Number(timestamp)}\n` : '') +
+    `ORDER BY created_at`
+  )).rows;
+
+  return rawData;
 }
 
 export async function createFlashcard (currentDate, frontText) {
@@ -190,7 +202,7 @@ export async function getAllRepetitions (currentDate) {
       ORDER BY planned_day ASC
       LIMIT 1
     )
-    SELECT r.uuid, r.flashcard_uuid, r.seq, r.planned_day, r.actual_date,
+    SELECT r.uuid, r.flashcard_uuid, r.seq, r.planned_day, r.actual_date, r.updated_at,
       (
         CASE
         WHEN (SELECT planned_day FROM last_completed_day) IS NULL
@@ -215,6 +227,19 @@ export async function getAllRepetitions (currentDate) {
 
   return rawData
     .map(row => Object.assign({}, row, {actualDate: row.actualDate ? moment(row.actualDate).format('D MMM YYYY') : ''}));
+}
+
+export async function getAllRepetitionsSimple (timestamp) {
+  const rawData = (await query(
+    `
+      SELECT uuid, flashcard_uuid, seq, planned_day, actual_date, (extract(epoch FROM created_at) * 1000) AS created_at, (extract(epoch FROM updated_at) * 1000) AS updated_at
+      FROM repetitions
+    ` +
+    (Number(timestamp) ? `WHERE (extract(epoch FROM updated_at) * 1000) > ${Number(timestamp)}\n` : '') +
+    `ORDER BY created_at`
+  )).rows;
+
+  return rawData;
 }
 
 export async function memorizeRepetition (uuid, date) {
