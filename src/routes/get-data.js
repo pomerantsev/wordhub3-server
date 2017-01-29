@@ -2,10 +2,6 @@ import moment from 'moment';
 import * as data from '../data/data';
 
 export default async function GetDataRoute (req, res) {
-
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-
   const timestamp = req.query.timestamp || 0;
 
   // Maybe we should make it fully consistent?

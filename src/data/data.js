@@ -288,3 +288,65 @@ export async function memorizeRepetition (uuid, date) {
     COMMIT;
   `);
 }
+
+export async function syncData (flashcards, repetitions) {
+  // TODO: what happens if we try to insert a repetition
+  // for which a flashcard doesn't exist?
+
+  // TODO: we need to ensure on the db level that no repetitions
+  // with the same (flashcard_uuid, seq) are inserted.
+  // But in general, this is a frontend problem
+
+  const queryText = `
+    BEGIN;
+
+    ${flashcards.length ?
+      `
+        INSERT INTO flashcards
+          (uuid, front_text, created_at, updated_at)
+          VALUES
+          ${flashcards.map(flashcard =>
+            `(
+              '${escape(flashcard.uuid)}',
+              '${escape(flashcard.frontText)}',
+              LOCALTIMESTAMP,
+              LOCALTIMESTAMP
+            )`
+          ).join(',\n')}
+        ON CONFLICT (uuid) DO UPDATE
+          SET
+            front_text = EXCLUDED.front_text,
+            updated_at = LOCALTIMESTAMP;
+      ` : ''
+    }
+
+    ${repetitions.length ?
+      `
+        INSERT INTO repetitions
+          (uuid, flashcard_uuid, seq, planned_day, actual_date, created_at, updated_at)
+          VALUES
+          ${repetitions.map(repetition =>
+            `(
+              '${escape(repetition.uuid)}',
+              '${escape(repetition.flashcardUuid)}',
+              ${Number(repetition.seq)},
+              ${Number(repetition.plannedDay)},
+              ${repetition.actualDate ? '\'' + escape(repetition.actualDate) + '\'' : 'NULL'},
+              LOCALTIMESTAMP,
+              LOCALTIMESTAMP
+            )`
+          ).join(',\n')}
+        ON CONFLICT (flashcard_uuid, seq) DO UPDATE
+          SET
+            uuid = EXCLUDED.uuid,
+            planned_day = EXCLUDED.planned_day,
+            actual_date = EXCLUDED.actual_date,
+            updated_at = LOCALTIMESTAMP;
+      ` : ''
+    }
+
+    COMMIT;
+  `;
+
+  await query(queryText);
+}
