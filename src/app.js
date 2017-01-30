@@ -3,6 +3,7 @@ import path from 'path';
 
 import GetDataRoute from './routes/get-data';
 import SendDataRoute from './routes/send-data';
+import SyncDataRoute from './routes/sync-data';
 
 import express from 'express';
 import bodyParser from 'body-parser';
@@ -17,5 +18,8 @@ app.use((req, res, next) => {
 
 app.get('/get-data', GetDataRoute);
 app.post('/send-data', bodyParser.json(), SendDataRoute);
+
+// Both sets and gets data in the same call
+app.post('/sync-data', bodyParser.json(), SyncDataRoute);
 
 app.listen(process.env.PORT || 3000);

@@ -40,6 +40,11 @@ function integer (num) {
   return String(num);
 }
 
+function float (num) {
+  assert.equal(typeof num, 'number');
+  return String(num);
+}
+
 function string (str) {
   assert.equal(typeof str, 'string');
   return '\'' + escape(str) + '\'';
@@ -104,29 +109,57 @@ async function query (input) {
   });
 }
 
-export async function getAllFlashcardsSimple (timestamp) {
+async function getAllFlashcards (timestamp) {
   const rawData = (await query(
     `
       SELECT uuid, front_text, (extract(epoch FROM created_at) * 1000) AS created_at, (extract(epoch FROM updated_at) * 1000) AS updated_at
       FROM flashcards
-    ` + (timestamp ? `WHERE (extract(epoch FROM updated_at) * 1000) > ${integer(timestamp)}\n` : '') +
+    ` + (timestamp ? `WHERE floor(extract(epoch FROM updated_at) * 1000) > floor(${float(timestamp)})\n` : '') +
     `ORDER BY created_at`
   )).rows;
 
   return rawData;
 }
 
-export async function getAllRepetitionsSimple (timestamp) {
+async function getAllRepetitions (timestamp) {
   const rawData = (await query(
     `
       SELECT uuid, flashcard_uuid, seq, planned_day, actual_date, (extract(epoch FROM created_at) * 1000) AS created_at, (extract(epoch FROM updated_at) * 1000) AS updated_at
       FROM repetitions
     ` +
-    (timestamp ? `WHERE (extract(epoch FROM updated_at) * 1000) > ${integer(timestamp)}\n` : '') +
+    (timestamp ? `WHERE floor(extract(epoch FROM updated_at) * 1000) > floor(${float(timestamp)})\n` : '') +
     `ORDER BY created_at`
   )).rows;
 
   return rawData;
+}
+
+export async function getAllFlashcardsAndRepetitions (timestamp) {
+  // TODO: Make it fully consistent (single call to db).
+  const flashcards = await getAllFlashcards(timestamp);
+  const repetitions = await getAllRepetitions(timestamp);
+  const maxFlashcardTimestamp = flashcards.reduce((prev, cur) => Math.max(prev, cur.updatedAt), 0);
+  const maxRepetitionTimestamp = repetitions.reduce((prev, cur) => Math.max(prev, cur.updatedAt), 0);
+  return {
+    flashcards: flashcards.map(flashcard => ({
+      uuid: flashcard.uuid,
+      frontText: flashcard.frontText,
+      createdAt: flashcard.createdAt,
+      updatedAt: flashcard.updatedAt
+    })),
+    repetitions: repetitions.map(repetition => ({
+      uuid: repetition.uuid,
+      flashcardUuid: repetition.flashcardUuid,
+      seq: repetition.seq,
+      plannedDay: repetition.plannedDay,
+      actualDate: repetition.actualDate ?
+        moment(repetition.actualDate).format('YYYY-MM-DD') :
+        null,
+      createdAt: repetition.createdAt,
+      updatedAt: repetition.updatedAt
+    })),
+    updatedAt: Math.max(maxFlashcardTimestamp, maxRepetitionTimestamp, (timestamp || 0))
+  };
 }
 
 /**
