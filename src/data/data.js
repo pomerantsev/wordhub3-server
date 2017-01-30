@@ -1,5 +1,6 @@
 import pg from 'pg';
 import moment from 'moment';
+import assert from 'assert';
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 
@@ -31,6 +32,30 @@ function escape (str) {
                           // and double/single quotes
     }
   });
+}
+
+function integer (num) {
+  assert.equal(typeof num, 'number');
+  assert.equal(Math.floor(num), num);
+  return String(num);
+}
+
+function string (str) {
+  assert.equal(typeof str, 'string');
+  return '\'' + escape(str) + '\'';
+}
+
+function stringOrNull (str) {
+  assert.ok(
+    typeof str === 'string' ||
+      (typeof str === 'object' && !str) ||
+      typeof str === 'undefined'
+  );
+  if (typeof str === 'string') {
+    return '\'' + escape(str) + '\'';
+  } else {
+    return 'NULL';
+  }
 }
 
 function camelizeKeys (rows) {
@@ -79,10 +104,6 @@ async function query (input) {
   });
 }
 
-async function getCurrentDayNumber () {
-
-}
-
 export async function getAllFlashcards () {
   const rawData = (await query(`
     SELECT uuid, front_text, updated_at
@@ -98,7 +119,7 @@ export async function getAllFlashcardsSimple (timestamp) {
     `
       SELECT uuid, front_text, (extract(epoch FROM created_at) * 1000) AS created_at, (extract(epoch FROM updated_at) * 1000) AS updated_at
       FROM flashcards
-    ` + (Number(timestamp) ? `WHERE (extract(epoch FROM updated_at) * 1000) > ${Number(timestamp)}\n` : '') +
+    ` + (timestamp ? `WHERE (extract(epoch FROM updated_at) * 1000) > ${integer(timestamp)}\n` : '') +
     `ORDER BY created_at`
   )).rows;
 
@@ -126,9 +147,9 @@ export async function createFlashcard (currentDate, frontText) {
       LIMIT 1;
       IF rec IS NULL
       THEN
-        RETURN (SELECT DATE_PART('day', '${escape(currentDate)}'::timestamp - '${SEED_DATE}'::timestamp));
+        RETURN (SELECT DATE_PART('day', ${string(currentDate)}::timestamp - '${SEED_DATE}'::timestamp));
       ELSE
-        RETURN rec.planned_day + (SELECT DATE_PART('day', '${escape(currentDate)}'::timestamp - rec.actual_date::timestamp));
+        RETURN rec.planned_day + (SELECT DATE_PART('day', ${string(currentDate)}::timestamp - rec.actual_date::timestamp));
       END IF;
       END;
       $$
@@ -146,7 +167,7 @@ export async function createFlashcard (currentDate, frontText) {
         INSERT INTO flashcards
         (uuid, front_text, created_at, updated_at)
         VALUES
-        (gen_random_uuid(), '${escape(frontText)}', LOCALTIMESTAMP, LOCALTIMESTAMP)
+        (gen_random_uuid(), ${string(frontText)}, LOCALTIMESTAMP, LOCALTIMESTAMP)
         RETURNING uuid
         INTO inserted_flashcard_uuid;
 
@@ -170,9 +191,9 @@ export async function updateFlashcard (uuid, frontText) {
 
     UPDATE flashcards
       SET
-      front_text = '${escape(frontText)}',
+      front_text = ${string(frontText)},
       updated_at = LOCALTIMESTAMP
-    WHERE uuid = '${escape(uuid)}';
+    WHERE uuid = ${string(uuid)};
 
     COMMIT;
   `);
@@ -198,7 +219,7 @@ export async function getAllRepetitions (currentDate) {
     first_available_day_after_last_completed_day AS (
       SELECT planned_day
       FROM repetitions
-      WHERE planned_day BETWEEN (SELECT planned_day FROM last_completed_day) + 1 AND (SELECT planned_day FROM last_completed_day) + (SELECT DATE_PART('day', '${escape(currentDate)}'::timestamp - (SELECT max_actual_date FROM last_completed_day)::timestamp))
+      WHERE planned_day BETWEEN (SELECT planned_day FROM last_completed_day) + 1 AND (SELECT planned_day FROM last_completed_day) + (SELECT DATE_PART('day', ${string(currentDate)}::timestamp - (SELECT max_actual_date FROM last_completed_day)::timestamp))
       ORDER BY planned_day ASC
       LIMIT 1
     )
@@ -206,17 +227,17 @@ export async function getAllRepetitions (currentDate) {
       (
         CASE
         WHEN (SELECT planned_day FROM last_completed_day) IS NULL
-          AND (SELECT DATE_PART('day', '${escape(currentDate)}'::timestamp - '${SEED_DATE}'::timestamp)) >= (SELECT planned_day FROM first_day)
+          AND (SELECT DATE_PART('day', ${string(currentDate)}::timestamp - '${SEED_DATE}'::timestamp)) >= (SELECT planned_day FROM first_day)
           AND r.planned_day = (SELECT planned_day FROM first_day)
-          AND (r.actual_date IS NULL OR r.actual_date >= '${escape(currentDate)}')
+          AND (r.actual_date IS NULL OR r.actual_date >= ${string(currentDate)})
           THEN true
         WHEN r.planned_day = (SELECT planned_day FROM last_completed_day)
-          AND (SELECT max_actual_date FROM last_completed_day) >= '${escape(currentDate)}'
+          AND (SELECT max_actual_date FROM last_completed_day) >= ${string(currentDate)}
           AND r.actual_date = (SELECT max_actual_date FROM last_completed_day)
           THEN true
         WHEN r.planned_day = (SELECT planned_day FROM first_available_day_after_last_completed_day)
-          AND (r.actual_date IS NULL OR r.actual_date >= '${escape(currentDate)}')
-          AND (SELECT max_actual_date FROM last_completed_day) < '${escape(currentDate)}'
+          AND (r.actual_date IS NULL OR r.actual_date >= ${string(currentDate)})
+          AND (SELECT max_actual_date FROM last_completed_day) < ${string(currentDate)}
           THEN true
         ELSE false
         END
@@ -235,7 +256,7 @@ export async function getAllRepetitionsSimple (timestamp) {
       SELECT uuid, flashcard_uuid, seq, planned_day, actual_date, (extract(epoch FROM created_at) * 1000) AS created_at, (extract(epoch FROM updated_at) * 1000) AS updated_at
       FROM repetitions
     ` +
-    (Number(timestamp) ? `WHERE (extract(epoch FROM updated_at) * 1000) > ${Number(timestamp)}\n` : '') +
+    (timestamp ? `WHERE (extract(epoch FROM updated_at) * 1000) > ${integer(timestamp)}\n` : '') +
     `ORDER BY created_at`
   )).rows;
 
@@ -248,9 +269,9 @@ export async function memorizeRepetition (uuid, date) {
 
     UPDATE repetitions
       SET
-      actual_date = '${escape(date)}',
+      actual_date = ${string(date)},
       updated_at = LOCALTIMESTAMP
-    WHERE uuid = '${escape(uuid)}';
+    WHERE uuid = ${string(uuid)};
 
     DROP FUNCTION IF EXISTS add_repetition_if_necessary();
 
@@ -265,7 +286,7 @@ export async function memorizeRepetition (uuid, date) {
       BEGIN
         SELECT * INTO rec
         FROM repetitions AS r
-        WHERE r.uuid = '${escape(uuid)}';
+        WHERE r.uuid = ${string(uuid)};
         new_planned_day := CASE
           WHEN rec.seq = 1 THEN rec.planned_day + 5 + floor(random() * 6)
           WHEN rec.seq = 2 THEN rec.planned_day + 20 + floor(random() * 11)
@@ -289,14 +310,19 @@ export async function memorizeRepetition (uuid, date) {
   `);
 }
 
-export async function syncData (flashcards, repetitions) {
-  // TODO: what happens if we try to insert a repetition
-  // for which a flashcard doesn't exist?
-
-  // TODO: we need to ensure on the db level that no repetitions
-  // with the same (flashcard_uuid, seq) are inserted.
-  // But in general, this is a frontend problem
-
+/**
+ * This function accepts two arrays (with flashcards and repetitions).
+ * It doesn't throw only if input is valid:
+ * - flashcards and repetitions are arrays
+ * - each element of each array is an object
+ * - each flashcard consists of uuid and frontText (both text) (to be expanded)
+ * - each repetition consists of uuid (text), flashcardUuid (text),
+ *   seq (int), plannedDay (int), actualDate (text or null) (to be expanded)
+ * - no two repetitions can have the same uuid, or the same flashcardUuid and seq
+ * - no repetition should have a flashcardUuid that doesn't exist in the db
+ */
+export async function syncData (requestBody) {
+  const {flashcards, repetitions} = requestBody;
   const queryText = `
     BEGIN;
 
@@ -307,8 +333,8 @@ export async function syncData (flashcards, repetitions) {
           VALUES
           ${flashcards.map(flashcard =>
             `(
-              '${escape(flashcard.uuid)}',
-              '${escape(flashcard.frontText)}',
+              ${string(flashcard.uuid)},
+              ${string(flashcard.frontText)},
               LOCALTIMESTAMP,
               LOCALTIMESTAMP
             )`
@@ -327,11 +353,11 @@ export async function syncData (flashcards, repetitions) {
           VALUES
           ${repetitions.map(repetition =>
             `(
-              '${escape(repetition.uuid)}',
-              '${escape(repetition.flashcardUuid)}',
-              ${Number(repetition.seq)},
-              ${Number(repetition.plannedDay)},
-              ${repetition.actualDate ? '\'' + escape(repetition.actualDate) + '\'' : 'NULL'},
+              ${string(repetition.uuid)},
+              ${string(repetition.flashcardUuid)},
+              ${integer(repetition.seq)},
+              ${integer(repetition.plannedDay)},
+              ${stringOrNull(repetition.actualDate)},
               LOCALTIMESTAMP,
               LOCALTIMESTAMP
             )`
