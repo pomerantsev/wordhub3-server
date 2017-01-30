@@ -104,16 +104,6 @@ async function query (input) {
   });
 }
 
-export async function getAllFlashcards () {
-  const rawData = (await query(`
-    SELECT uuid, front_text, updated_at
-    FROM flashcards
-    ORDER BY created_at
-  `)).rows;
-
-  return rawData;
-}
-
 export async function getAllFlashcardsSimple (timestamp) {
   const rawData = (await query(
     `
@@ -124,130 +114,6 @@ export async function getAllFlashcardsSimple (timestamp) {
   )).rows;
 
   return rawData;
-}
-
-export async function createFlashcard (currentDate, frontText) {
-  const MIN_DATE_DIFF = 1;
-  const MAX_DATE_DIFF = 3;
-
-  await query(`
-    BEGIN;
-
-    DROP FUNCTION IF EXISTS get_flashcard_creation_day();
-
-    CREATE OR REPLACE FUNCTION get_flashcard_creation_day()
-      RETURNS integer
-      AS $$
-      DECLARE rec record;
-      BEGIN
-      SELECT r.planned_day, r.actual_date INTO rec
-      FROM repetitions AS r
-      WHERE r.actual_date IS NOT NULL
-      ORDER BY r.actual_date DESC
-      LIMIT 1;
-      IF rec IS NULL
-      THEN
-        RETURN (SELECT DATE_PART('day', ${string(currentDate)}::timestamp - '${SEED_DATE}'::timestamp));
-      ELSE
-        RETURN rec.planned_day + (SELECT DATE_PART('day', ${string(currentDate)}::timestamp - rec.actual_date::timestamp));
-      END IF;
-      END;
-      $$
-      LANGUAGE plpgsql;
-
-    DROP FUNCTION IF EXISTS insert_flashcard();
-
-    CREATE OR REPLACE FUNCTION insert_flashcard() RETURNS void AS $$
-      DECLARE
-        inserted_flashcard_uuid uuid;
-        inserted_repetition_uuid uuid;
-        seq integer := 1;
-        planned_day integer := get_flashcard_creation_day() + ${MIN_DATE_DIFF} + floor(random() * ${MAX_DATE_DIFF - MIN_DATE_DIFF + 1});
-      BEGIN
-        INSERT INTO flashcards
-        (uuid, front_text, created_at, updated_at)
-        VALUES
-        (gen_random_uuid(), ${string(frontText)}, LOCALTIMESTAMP, LOCALTIMESTAMP)
-        RETURNING uuid
-        INTO inserted_flashcard_uuid;
-
-        INSERT INTO repetitions
-        (uuid, flashcard_uuid, seq, planned_day, created_at, updated_at)
-        VALUES (gen_random_uuid(), inserted_flashcard_uuid, seq, planned_day, LOCALTIMESTAMP, LOCALTIMESTAMP)
-        RETURNING uuid
-        INTO inserted_repetition_uuid;
-      END;
-    $$ LANGUAGE plpgsql;
-
-    SELECT insert_flashcard();
-
-    COMMIT;
-  `);
-}
-
-export async function updateFlashcard (uuid, frontText) {
-  await query(`
-    BEGIN;
-
-    UPDATE flashcards
-      SET
-      front_text = ${string(frontText)},
-      updated_at = LOCALTIMESTAMP
-    WHERE uuid = ${string(uuid)};
-
-    COMMIT;
-  `);
-}
-
-export async function getAllRepetitions (currentDate) {
-  const rawData = (await query(`
-    WITH last_completed_day AS (
-      SELECT planned_day, max(actual_date) AS max_actual_date
-      FROM repetitions
-      GROUP BY planned_day
-      HAVING every(actual_date IS NOT NULL)
-      ORDER BY planned_day DESC
-      LIMIT 1
-    ),
-    first_day AS (
-      SELECT planned_day
-      FROM repetitions
-      GROUP BY planned_day
-      ORDER BY planned_day ASC
-      LIMIT 1
-    ),
-    first_available_day_after_last_completed_day AS (
-      SELECT planned_day
-      FROM repetitions
-      WHERE planned_day BETWEEN (SELECT planned_day FROM last_completed_day) + 1 AND (SELECT planned_day FROM last_completed_day) + (SELECT DATE_PART('day', ${string(currentDate)}::timestamp - (SELECT max_actual_date FROM last_completed_day)::timestamp))
-      ORDER BY planned_day ASC
-      LIMIT 1
-    )
-    SELECT r.uuid, r.flashcard_uuid, r.seq, r.planned_day, r.actual_date, r.updated_at,
-      (
-        CASE
-        WHEN (SELECT planned_day FROM last_completed_day) IS NULL
-          AND (SELECT DATE_PART('day', ${string(currentDate)}::timestamp - '${SEED_DATE}'::timestamp)) >= (SELECT planned_day FROM first_day)
-          AND r.planned_day = (SELECT planned_day FROM first_day)
-          AND (r.actual_date IS NULL OR r.actual_date >= ${string(currentDate)})
-          THEN true
-        WHEN r.planned_day = (SELECT planned_day FROM last_completed_day)
-          AND (SELECT max_actual_date FROM last_completed_day) >= ${string(currentDate)}
-          AND r.actual_date = (SELECT max_actual_date FROM last_completed_day)
-          THEN true
-        WHEN r.planned_day = (SELECT planned_day FROM first_available_day_after_last_completed_day)
-          AND (r.actual_date IS NULL OR r.actual_date >= ${string(currentDate)})
-          AND (SELECT max_actual_date FROM last_completed_day) < ${string(currentDate)}
-          THEN true
-        ELSE false
-        END
-      ) AS today
-    FROM repetitions AS r
-    ORDER BY created_at
-  `)).rows;
-
-  return rawData
-    .map(row => Object.assign({}, row, {actualDate: row.actualDate ? moment(row.actualDate).format('D MMM YYYY') : ''}));
 }
 
 export async function getAllRepetitionsSimple (timestamp) {
@@ -261,53 +127,6 @@ export async function getAllRepetitionsSimple (timestamp) {
   )).rows;
 
   return rawData;
-}
-
-export async function memorizeRepetition (uuid, date) {
-  await query(`
-    BEGIN;
-
-    UPDATE repetitions
-      SET
-      actual_date = ${string(date)},
-      updated_at = LOCALTIMESTAMP
-    WHERE uuid = ${string(uuid)};
-
-    DROP FUNCTION IF EXISTS add_repetition_if_necessary();
-
-    CREATE OR REPLACE FUNCTION add_repetition_if_necessary()
-      RETURNS void
-      AS $$
-      DECLARE
-        rec record;
-        inserted_repetition_uuid uuid;
-        new_planned_day integer;
-        new_seq integer;
-      BEGIN
-        SELECT * INTO rec
-        FROM repetitions AS r
-        WHERE r.uuid = ${string(uuid)};
-        new_planned_day := CASE
-          WHEN rec.seq = 1 THEN rec.planned_day + 5 + floor(random() * 6)
-          WHEN rec.seq = 2 THEN rec.planned_day + 20 + floor(random() * 11)
-          ELSE NULL
-          END;
-        new_seq := rec.seq + 1;
-        IF new_planned_day IS NOT NULL THEN
-          INSERT INTO repetitions
-          (uuid, flashcard_uuid, seq, planned_day, created_at, updated_at)
-          VALUES (gen_random_uuid(), rec.flashcard_uuid, new_seq, new_planned_day, LOCALTIMESTAMP, LOCALTIMESTAMP)
-          RETURNING uuid
-          INTO inserted_repetition_uuid;
-        END IF;
-      END;
-      $$
-      LANGUAGE plpgsql;
-
-    SELECT add_repetition_if_necessary();
-
-    COMMIT;
-  `);
 }
 
 /**
