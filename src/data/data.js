@@ -109,6 +109,16 @@ async function query (input) {
   });
 }
 
+export async function getUserByEmail (email) {
+  const user = (await query(`
+    SELECT *
+    FROM users
+    WHERE email = ${string(email)}
+  `)).rows[0];
+
+  return user;
+}
+
 async function getAllFlashcards (timestamp) {
   const rawData = (await query(
     `

@@ -7,6 +7,8 @@ import GetDataRoute from './routes/get-data';
 import SendDataRoute from './routes/send-data';
 import SyncDataRoute from './routes/sync-data';
 
+import LoginRoute from './routes/login';
+
 import express from 'express';
 import bodyParser from 'body-parser';
 
@@ -18,7 +20,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.post('/login', bodyParser.json(), auth.viaCredentials);
+app.post('/login', bodyParser.json(), LoginRoute);
 
 app.get('/get-data', GetDataRoute);
 app.post('/send-data', bodyParser.json(), SendDataRoute);

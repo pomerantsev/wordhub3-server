@@ -1,30 +1,24 @@
+import sha1 from 'sha1';
 import jwt from 'jsonwebtoken';
+
+import * as data from './data';
 
 const secret = 'blah';
 
-const users = [
-  {
-    email: 'user1@email.com',
-    password: 'pass1'
-  },
-  {
-    email: 'user2@email.com',
-    password: 'pass2'
-  }
-];
-
-export function viaCredentials (req, res, next) {
-  const foundUser = users.find(user =>
-    user.email === req.body.email && user.password === req.body.password);
+export async function viaCredentials (email, password) {
+  const foundUser = await data.getUserByEmail(email);
+  // const foundUser = users.find(user => user.email === email);
   if (foundUser) {
-    // TODO: Implement token expiration
-    const token = jwt.sign(foundUser, secret);
-    res.json({
-      success: true,
-      token
-    });
+    // This branching is here for historical reasons.
+    if (foundUser.salt && foundUser.hashedPassword === sha1(`Put ${foundUser.salt} on the ${password}`) ||
+        foundUser.hashedPassword === sha1(password)) {
+      // TODO: Implement token expiration
+      return jwt.sign(foundUser, secret);
+    } else {
+      return null;
+    }
   } else {
-    res.status(403).json({success: false, message: 'Email or password incorrect.'})
+    return null;
   }
 }
 
