@@ -119,35 +119,50 @@ export async function getUserByEmail (email) {
   return user;
 }
 
-async function getAllFlashcards (timestamp) {
+export async function getAllUserIdsFromFlashcardUuids (flashcardUuids) {
+  const userIds = flashcardUuids.length > 0 ?
+    (await query(`
+      SELECT DISTINCT user_id
+      FROM flashcards
+      WHERE uuid IN (${flashcardUuids.map(uuid => string(uuid)).join(', ')})
+    `)).rows
+      .map(flashcard => flashcard.userId) :
+    [];
+
+  return userIds;
+}
+
+async function getAllFlashcards (userId, timestamp) {
   const rawData = (await query(
     `
       SELECT uuid, front_text, (extract(epoch FROM created_at) * 1000) AS created_at, (extract(epoch FROM updated_at) * 1000) AS updated_at
       FROM flashcards
-    ` + (timestamp ? `WHERE floor(extract(epoch FROM updated_at) * 1000) > floor(${float(timestamp)})\n` : '') +
+      WHERE user_id = ${integer(userId)}
+    ` + (timestamp ? `AND floor(extract(epoch FROM updated_at) * 1000) > floor(${float(timestamp)})\n` : '') +
     `ORDER BY created_at`
   )).rows;
 
   return rawData;
 }
 
-async function getAllRepetitions (timestamp) {
+async function getAllRepetitions (userId, timestamp) {
   const rawData = (await query(
     `
       SELECT uuid, flashcard_uuid, seq, planned_day, actual_date, (extract(epoch FROM created_at) * 1000) AS created_at, (extract(epoch FROM updated_at) * 1000) AS updated_at
       FROM repetitions
+      WHERE flashcard_uuid IN (SELECT uuid FROM flashcards WHERE user_id = ${integer(userId)})
     ` +
-    (timestamp ? `WHERE floor(extract(epoch FROM updated_at) * 1000) > floor(${float(timestamp)})\n` : '') +
+    (timestamp ? `AND floor(extract(epoch FROM updated_at) * 1000) > floor(${float(timestamp)})\n` : '') +
     `ORDER BY created_at`
   )).rows;
 
   return rawData;
 }
 
-export async function getAllFlashcardsAndRepetitions (timestamp) {
+export async function getAllFlashcardsAndRepetitions (userId, timestamp) {
   // TODO: Make it fully consistent (single call to db).
-  const flashcards = await getAllFlashcards(timestamp);
-  const repetitions = await getAllRepetitions(timestamp);
+  const flashcards = await getAllFlashcards(userId, timestamp);
+  const repetitions = await getAllRepetitions(userId, timestamp);
   const maxFlashcardTimestamp = flashcards.reduce((prev, cur) => Math.max(prev, cur.updatedAt), 0);
   const maxRepetitionTimestamp = repetitions.reduce((prev, cur) => Math.max(prev, cur.updatedAt), 0);
   return {
@@ -183,7 +198,7 @@ export async function getAllFlashcardsAndRepetitions (timestamp) {
  * - no two repetitions can have the same uuid, or the same flashcardUuid and seq
  * - no repetition should have a flashcardUuid that doesn't exist in the db
  */
-export async function syncData (requestBody) {
+export async function syncData (userId, requestBody) {
   const {flashcards, repetitions} = requestBody;
   const queryText = `
     BEGIN;
@@ -191,10 +206,11 @@ export async function syncData (requestBody) {
     ${flashcards.length ?
       `
         INSERT INTO flashcards
-          (uuid, front_text, created_at, updated_at)
+          (user_id, uuid, front_text, created_at, updated_at)
           VALUES
           ${flashcards.map(flashcard =>
             `(
+              ${integer(userId)},
               ${string(flashcard.uuid)},
               ${string(flashcard.frontText)},
               LOCALTIMESTAMP,

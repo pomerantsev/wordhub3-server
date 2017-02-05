@@ -22,8 +22,8 @@ app.use((req, res, next) => {
 
 app.post('/login', bodyParser.json(), LoginRoute);
 
-app.get('/get-data', GetDataRoute);
-app.post('/send-data', bodyParser.json(), SendDataRoute);
+app.get('/get-data', auth.viaToken, GetDataRoute);
+app.post('/send-data', auth.viaToken, bodyParser.json(), SendDataRoute);
 
 // Both sets and gets data in the same call
 app.post(
