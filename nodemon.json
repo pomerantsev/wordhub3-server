@@ -1,5 +1,7 @@
 {
   "events": {
-    "crash": "osascript -e 'display notification \"Nodemon error\" with title \"Nodemon\"'"
+    "start": "npm run lint",
+    "restart": "npm run lint",
+    "crash": "./scripts/notify.sh Nodemon 'Nodemon error'"
   }
 }

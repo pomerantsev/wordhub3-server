@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index",
     "dev": "nodemon index",
+    "lint": "./scripts/lint.sh",
+    "start": "node index",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Pavel Pomerantsev",
@@ -27,6 +28,8 @@
     "sha1": "^1.1.1"
   },
   "devDependencies": {
+    "babel-eslint": "^7.1.1",
+    "eslint": "^3.15.0",
     "nodemon": "^1.11.0"
   }
 }

@@ -2,12 +2,6 @@ import pg from 'pg';
 import moment from 'moment';
 import assert from 'assert';
 
-const DATE_FORMAT = 'YYYY-MM-DD';
-
-// This is a random date before the first repetition is created.
-const SEED_DATE = '2016-12-25';
-
-
 // http://stackoverflow.com/a/7760578
 function escape (str) {
   return str.replace(/[\0\x08\x09\x1a\n\r"'\\\%]/g, char => {
@@ -139,7 +133,7 @@ async function getAllFlashcards (userId, timestamp) {
       FROM flashcards
       WHERE user_id = ${integer(userId)}
     ` + (timestamp ? `AND floor(extract(epoch FROM updated_at) * 1000) > floor(${float(timestamp)})\n` : '') +
-    `ORDER BY created_at`
+    'ORDER BY created_at'
   )).rows;
 
   return rawData;
@@ -153,7 +147,7 @@ async function getAllRepetitions (userId, timestamp) {
       WHERE flashcard_uuid IN (SELECT uuid FROM flashcards WHERE user_id = ${integer(userId)})
     ` +
     (timestamp ? `AND floor(extract(epoch FROM updated_at) * 1000) > floor(${float(timestamp)})\n` : '') +
-    `ORDER BY created_at`
+    'ORDER BY created_at'
   )).rows;
 
   return rawData;
