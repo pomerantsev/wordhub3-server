@@ -2,6 +2,8 @@ import pg from 'pg';
 import moment from 'moment';
 import assert from 'assert';
 
+import configs from '../../db-config';
+
 // http://stackoverflow.com/a/7760578
 function escape (str) {
   return str.replace(/[\0\x08\x09\x1a\n\r"'\\\%]/g, char => {
@@ -68,15 +70,7 @@ function camelizeKeys (rows) {
   });
 }
 
-const config = {
-  user: process.env.PGUSER,
-  database: process.env.PGDATABASE,
-  password: process.env.PGPASSWORD,
-  host: process.env.PGHOST,
-  port: process.env.PGPORT,
-  max: 10,
-  idleTimeoutMillis: 30000
-};
+const config = configs[process.env.NODE_ENV];
 
 const pool = new pg.Pool(config);
 

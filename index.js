@@ -2,4 +2,6 @@ require('dotenv').config({silent: true});
 
 require('babel-register')();
 
-require('./src/app');
+const createServer = require('./src/app').default;
+
+createServer(process.env.PORT || 3000);

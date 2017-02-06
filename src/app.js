@@ -12,25 +12,27 @@ import LoginRoute from './routes/login';
 import express from 'express';
 import bodyParser from 'body-parser';
 
-const app = express();
+export default function createServer (port) {
+  const app = express();
 
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-  next();
-});
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    next();
+  });
 
-app.post('/login', bodyParser.json(), LoginRoute);
+  app.post('/login', bodyParser.json(), LoginRoute);
 
-app.get('/get-data', auth.viaToken, GetDataRoute);
-app.post('/send-data', auth.viaToken, bodyParser.json(), SendDataRoute);
+  app.get('/get-data', auth.viaToken, GetDataRoute);
+  app.post('/send-data', auth.viaToken, bodyParser.json(), SendDataRoute);
 
-// Both sets and gets data in the same call
-app.post(
-  '/sync-data',
-  auth.viaToken,
-  bodyParser.json(),
-  SyncDataRoute
-);
+  // Both sets and gets data in the same call
+  app.post(
+    '/sync-data',
+    auth.viaToken,
+    bodyParser.json(),
+    SyncDataRoute
+  );
 
-app.listen(process.env.PORT || 3000);
+  return app.listen(port);
+}

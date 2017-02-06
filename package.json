@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon index",
+    "dev": "export NODE_ENV=development; nodemon index",
     "lint": "./scripts/lint.sh",
     "start": "node index",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "export NODE_ENV=test; ./node_modules/.bin/mocha -r dotenv/config --compilers js:babel-register ./test/**/*.js"
   },
   "author": "Pavel Pomerantsev",
   "license": "ISC",
@@ -29,7 +29,10 @@
   },
   "devDependencies": {
     "babel-eslint": "^7.1.1",
+    "chai": "^3.5.0",
     "eslint": "^3.15.0",
+    "mocha": "^3.2.0",
+    "node-fetch": "^1.6.3",
     "nodemon": "^1.11.0"
   }
 }

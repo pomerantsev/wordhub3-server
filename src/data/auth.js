@@ -3,13 +3,23 @@ import jwt from 'jsonwebtoken';
 
 import * as data from './data';
 
+export function hashPassword (password, salt) {
+  // This branching is here for historical reasons.
+  if (salt) {
+    return sha1(`Put ${salt} on the ${password}`);
+  } else {
+    return sha1(password);
+  }
+}
+
+export function hashWithoutSalt (password) {
+  return sha1(password);
+}
+
 export async function viaCredentials (email, password) {
   const foundUser = await data.getUserByEmail(email);
-  // const foundUser = users.find(user => user.email === email);
   if (foundUser) {
-    // This branching is here for historical reasons.
-    if (foundUser.salt && foundUser.hashedPassword === sha1(`Put ${foundUser.salt} on the ${password}`) ||
-        foundUser.hashedPassword === sha1(password)) {
+    if (foundUser.hashedPassword === hashPassword(password, foundUser.salt)) {
       // TODO: Implement token expiration
       return jwt.sign(foundUser, process.env.JWT_SECRET);
     } else {

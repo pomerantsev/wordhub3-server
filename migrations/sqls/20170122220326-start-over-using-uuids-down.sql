@@ -18,7 +18,7 @@ ALTER TABLE flashcards
 ALTER TABLE repetitions
   DROP COLUMN updated_at,
   DROP COLUMN created_at,
-  DROP CONSTRAINT repetitions_flashcard_uuid_seq_key,
+  -- DROP CONSTRAINT repetitions_flashcard_uuid_seq_key,
   DROP COLUMN uuid,
   DROP COLUMN flashcard_uuid,
   ADD COLUMN id serial PRIMARY KEY,

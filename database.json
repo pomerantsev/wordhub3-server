@@ -2,8 +2,14 @@
   "sql-file": true,
   "dev": {
     "driver": "pg",
-    "host": {"ENV": "PGHOST"},
-    "database": {"ENV": "PGDATABASE"},
-    "user": {"ENV": "PGUSER"}
+    "host": {"ENV": "PGHOST_DEV"},
+    "database": {"ENV": "PGDATABASE_DEV"},
+    "user": {"ENV": "PGUSER_DEV"}
+  },
+  "test": {
+    "driver": "pg",
+    "host": {"ENV": "PGHOST_TEST"},
+    "database": {"ENV": "PGDATABASE_TEST"},
+    "user": {"ENV": "PGUSER_TEST"}
   }
 }
