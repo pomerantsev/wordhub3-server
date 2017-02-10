@@ -1,7 +1,7 @@
 import * as auth from '../data/auth';
 
 export default async function LoginRoute (req, res) {
-  if (!req.body) {
+  if (!req.body || !req.body.email || !req.body.password) {
     res.status(401).json({message: 'Incorrect login data'});
     return;
   }
