@@ -22,7 +22,10 @@ export async function query (input) {
             console.error(queryErr);
             reject(queryErr);
           } else {
-            resolve();
+            resolve({
+              rows: data.rows,
+              rowCount: data.rowCount
+            });
           }
         });
       }
@@ -81,7 +84,7 @@ export async function seed () {
       (flashcard_uuid, uuid, seq, planned_day, updated_at)
       VALUES
       ('fl11', 'rep111', 1, 2, to_timestamp(1)),
-      ('fl12', 'rep121', 1, 7, to_timestamp(5)),
+      ('fl12', 'rep121', 1, 7, to_timestamp(6)),
       ('fl21', 'rep211', 1, 3, to_timestamp(2)),
       ('fl22', 'rep221', 1, 7, to_timestamp(6));
   `);
