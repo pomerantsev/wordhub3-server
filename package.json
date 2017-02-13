@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "export NODE_ENV=development; nodemon index",
     "lint": "./scripts/lint.sh",
+    "prestart": "./node_modules/.bin/db-migrate up",
     "start": "node index",
     "test": "export NODE_ENV=test; ./node_modules/.bin/mocha -r dotenv/config --compilers js:babel-register ./test/**/*.js"
   },

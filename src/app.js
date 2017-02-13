@@ -21,6 +21,10 @@ export default function createServer (port) {
     next();
   });
 
+  app.get('/ping', (req, res) => {
+    res.sendStatus(200);
+  });
+
   app.post('/login', bodyParser.json(), LoginRoute);
 
   app.get('/get-data', auth.viaToken, GetDataRoute);
