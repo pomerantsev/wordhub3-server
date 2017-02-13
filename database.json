@@ -11,5 +11,13 @@
     "host": {"ENV": "PGHOST_TEST"},
     "database": {"ENV": "PGDATABASE_TEST"},
     "user": {"ENV": "PGUSER_TEST"}
+  },
+  "prod": {
+    "driver": "pg",
+    "host": {"ENV": "PGHOST_PROD"},
+    "port": {"ENV": "PGPORT_PROD"},
+    "database": {"ENV": "PGDATABASE_PROD"},
+    "user": {"ENV": "PGUSER_PROD"},
+    "password": {"ENV": "PGPASSWORD_PROD"}
   }
 }
