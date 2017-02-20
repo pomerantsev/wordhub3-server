@@ -46,6 +46,10 @@ function string (str) {
   return '\'' + escape(str) + '\'';
 }
 
+function boolean (bool) {
+  return bool ? 'TRUE' : 'FALSE';
+}
+
 function stringOrNull (str) {
   assert.ok(
     typeof str === 'string' ||
@@ -123,7 +127,7 @@ export async function getAllUserIdsFromFlashcardUuids (flashcardUuids) {
 async function getAllFlashcards (userId, timestamp) {
   const rawData = (await query(
     `
-      SELECT uuid, front_text, (extract(epoch FROM created_at) * 1000) AS created_at, (extract(epoch FROM updated_at) * 1000) AS updated_at
+      SELECT uuid, front_text, back_text, deleted, (extract(epoch FROM created_at) * 1000) AS created_at, (extract(epoch FROM updated_at) * 1000) AS updated_at
       FROM flashcards
       WHERE user_id = ${integer(userId)}
     ` + (timestamp ? `AND floor(extract(epoch FROM updated_at) * 1000) > floor(${float(timestamp)})\n` : '') +
@@ -136,7 +140,7 @@ async function getAllFlashcards (userId, timestamp) {
 async function getAllRepetitions (userId, timestamp) {
   const rawData = (await query(
     `
-      SELECT uuid, flashcard_uuid, seq, planned_day, actual_date, (extract(epoch FROM created_at) * 1000) AS created_at, (extract(epoch FROM updated_at) * 1000) AS updated_at
+      SELECT uuid, flashcard_uuid, seq, planned_day, actual_date, successful, (extract(epoch FROM created_at) * 1000) AS created_at, (extract(epoch FROM updated_at) * 1000) AS updated_at
       FROM repetitions
       WHERE flashcard_uuid IN (SELECT uuid FROM flashcards WHERE user_id = ${integer(userId)})
     ` +
@@ -157,6 +161,8 @@ export async function getAllFlashcardsAndRepetitions (userId, timestamp) {
     flashcards: flashcards.map(flashcard => ({
       uuid: flashcard.uuid,
       frontText: flashcard.frontText,
+      backText: flashcard.backText,
+      deleted: flashcard.deleted,
       createdAt: flashcard.createdAt,
       updatedAt: flashcard.updatedAt
     })),
@@ -168,6 +174,7 @@ export async function getAllFlashcardsAndRepetitions (userId, timestamp) {
       actualDate: repetition.actualDate ?
         moment(repetition.actualDate).format('YYYY-MM-DD') :
         null,
+      successful: repetition.successful,
       createdAt: repetition.createdAt,
       updatedAt: repetition.updatedAt
     })),
@@ -194,13 +201,15 @@ export async function syncData (userId, requestBody) {
     ${flashcards.length ?
       `
         INSERT INTO flashcards
-          (user_id, uuid, front_text, created_at, updated_at)
+          (user_id, uuid, front_text, back_text, deleted, created_at, updated_at)
           VALUES
           ${flashcards.map(flashcard =>
             `(
               ${integer(userId)},
               ${string(flashcard.uuid)},
               ${string(flashcard.frontText)},
+              ${string(flashcard.backText)},
+              ${boolean(flashcard.deleted)},
               LOCALTIMESTAMP,
               LOCALTIMESTAMP
             )`
@@ -208,6 +217,8 @@ export async function syncData (userId, requestBody) {
         ON CONFLICT (uuid) DO UPDATE
           SET
             front_text = EXCLUDED.front_text,
+            back_text = EXCLUDED.back_text,
+            deleted = EXCLUDED.deleted,
             updated_at = LOCALTIMESTAMP;
       ` : ''
     }
@@ -215,7 +226,7 @@ export async function syncData (userId, requestBody) {
     ${repetitions.length ?
       `
         INSERT INTO repetitions
-          (uuid, flashcard_uuid, seq, planned_day, actual_date, created_at, updated_at)
+          (uuid, flashcard_uuid, seq, planned_day, actual_date, successful, created_at, updated_at)
           VALUES
           ${repetitions.map(repetition =>
             `(
@@ -224,6 +235,7 @@ export async function syncData (userId, requestBody) {
               ${integer(repetition.seq)},
               ${integer(repetition.plannedDay)},
               ${stringOrNull(repetition.actualDate)},
+              ${boolean(repetition.successful)},
               LOCALTIMESTAMP,
               LOCALTIMESTAMP
             )`
@@ -233,6 +245,7 @@ export async function syncData (userId, requestBody) {
             uuid = EXCLUDED.uuid,
             planned_day = EXCLUDED.planned_day,
             actual_date = EXCLUDED.actual_date,
+            successful = EXCLUDED.successful,
             updated_at = LOCALTIMESTAMP;
       ` : ''
     }
