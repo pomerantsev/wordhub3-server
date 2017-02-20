@@ -1,7 +1,7 @@
 {
   "events": {
-    "start": "npm run lint",
-    "restart": "npm run lint",
+    "start": "npm run lint; npm test",
+    "restart": "npm run lint; npm test",
     "crash": "./scripts/notify.sh Nodemon 'Nodemon error'"
   }
 }
