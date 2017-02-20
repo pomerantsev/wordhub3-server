@@ -8,7 +8,7 @@ import * as helpers from '../helpers';
 import createServer from '../../src/app';
 
 async function postLogin (body) {
-  return await fetch('http://localhost:5000/login', {
+  return await fetch('http://localhost:5000/v1/login', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify(body)
@@ -60,7 +60,7 @@ describe('api', () => {
   describe('get-data', () => {
     describe('with an invalid token', () => {
       it('responds with 401', async function () {
-        const res = await fetch('http://localhost:5000/get-data?token=invalid');
+        const res = await fetch('http://localhost:5000/v1/get-data?token=invalid');
         assert.equal(401, res.status);
       });
     });
@@ -71,7 +71,7 @@ describe('api', () => {
       });
       describe('with timestamp', () => {
         it('returns all user’s flashcards and repetitions updated after timestamp', async function () {
-          const res = await fetch('http://localhost:5000/get-data?token=' + token + '&timestamp=1000');
+          const res = await fetch('http://localhost:5000/v1/get-data?token=' + token + '&timestamp=1000');
           const data = await res.json();
           assert.equal(data.flashcards.length, 1);
           assert.equal(data.repetitions.length, 1);
@@ -80,7 +80,7 @@ describe('api', () => {
       });
       describe('without timestamp', () => {
         it('returns all user’s flashcards and repetitions', async function () {
-          const res = await fetch('http://localhost:5000/get-data?token=' + token);
+          const res = await fetch('http://localhost:5000/v1/get-data?token=' + token);
           const data = await res.json();
           assert.equal(data.flashcards.length, 2);
           assert.equal(data.repetitions.length, 2);
@@ -95,7 +95,7 @@ describe('api', () => {
   describe('send-data', () => {
     describe('with an invalid token', () => {
       it('responds with 401', async function () {
-        const res = await fetch('http://localhost:5000/send-data?token=invalid', {
+        const res = await fetch('http://localhost:5000/v1/send-data?token=invalid', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({
@@ -115,7 +115,7 @@ describe('api', () => {
         describe('creating one flashcard', () => {
           it('creates the flashcard', async function () {
             assert.equal((await helpers.query('SELECT * FROM flashcards WHERE user_id = 1')).rowCount, 2);
-            const res = await fetch('http://localhost:5000/send-data?token=' + token, {
+            const res = await fetch('http://localhost:5000/v1/send-data?token=' + token, {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
               body: JSON.stringify({
@@ -130,7 +130,7 @@ describe('api', () => {
         describe('creating a flashcard and updating a flashcard', () => {
           it('does what it needs to', async function () {
             assert.isNotOk((await helpers.query('SELECT * FROM flashcards WHERE uuid = \'fl11\'')).rows[0].front_text);
-            const res = await fetch('http://localhost:5000/send-data?token=' + token, {
+            const res = await fetch('http://localhost:5000/v1/send-data?token=' + token, {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
               body: JSON.stringify({

@@ -25,14 +25,14 @@ export default function createServer (port) {
     res.sendStatus(200);
   });
 
-  app.post('/login', bodyParser.json(), LoginRoute);
+  app.post('/v1/login', bodyParser.json(), LoginRoute);
 
-  app.get('/get-data', auth.viaToken, GetDataRoute);
-  app.post('/send-data', auth.viaToken, bodyParser.json(), SendDataRoute);
+  app.get('/v1/get-data', auth.viaToken, GetDataRoute);
+  app.post('/v1/send-data', auth.viaToken, bodyParser.json(), SendDataRoute);
 
   // Both sets and gets data in the same call
   app.post(
-    '/sync-data',
+    '/v1/sync-data',
     auth.viaToken,
     bodyParser.json(),
     SyncDataRoute
