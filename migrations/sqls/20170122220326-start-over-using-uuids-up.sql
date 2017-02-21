@@ -3,7 +3,7 @@ BEGIN;
 DROP TABLE events;
 
 ALTER TABLE repetitions
-  DROP CONSTRAINT repetitions_flashcard_id_fkey;
+  DROP CONSTRAINT IF EXISTS repetitions_flashcard_id_fkey;
 
 TRUNCATE repetitions;
 
@@ -18,7 +18,7 @@ ALTER TABLE flashcards
   ADD COLUMN updated_at timestamptz;
 
 ALTER TABLE repetitions
-  DROP CONSTRAINT repetitions_flashcard_id_seq_key,
+  DROP CONSTRAINT IF EXISTS repetitions_flashcard_id_seq_key,
   DROP COLUMN id,
   DROP COLUMN flashcard_id,
   ADD COLUMN uuid uuid PRIMARY KEY,

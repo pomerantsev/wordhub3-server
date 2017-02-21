@@ -6,7 +6,7 @@
 BEGIN;
 
 ALTER TABLE repetitions
-  DROP CONSTRAINT repetitions_flashcard_uuid_fkey,
+  DROP CONSTRAINT IF EXISTS repetitions_flashcard_uuid_fkey,
   ALTER COLUMN uuid TYPE text,
   ALTER COLUMN flashcard_uuid TYPE text;
 

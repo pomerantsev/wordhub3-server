@@ -3,7 +3,7 @@ BEGIN;
 TRUNCATE TABLE flashcards CASCADE;
 
 ALTER TABLE repetitions
-  DROP CONSTRAINT repetitions_flashcard_uuid_fkey,
+  DROP CONSTRAINT IF EXISTS repetitions_flashcard_uuid_fkey,
   DROP COLUMN uuid,
   DROP COLUMN flashcard_uuid;
 

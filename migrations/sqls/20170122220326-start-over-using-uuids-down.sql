@@ -1,7 +1,7 @@
 BEGIN;
 
 ALTER TABLE repetitions
-  DROP CONSTRAINT repetitions_flashcard_uuid_fkey;
+  DROP CONSTRAINT IF EXISTS repetitions_flashcard_uuid_fkey;
 
 TRUNCATE repetitions;
 
@@ -18,7 +18,7 @@ ALTER TABLE flashcards
 ALTER TABLE repetitions
   DROP COLUMN updated_at,
   DROP COLUMN created_at,
-  -- DROP CONSTRAINT repetitions_flashcard_uuid_seq_key,
+  DROP CONSTRAINT IF EXISTS repetitions_flashcard_uuid_seq_key,
   DROP COLUMN uuid,
   DROP COLUMN flashcard_uuid,
   ADD COLUMN id serial PRIMARY KEY,

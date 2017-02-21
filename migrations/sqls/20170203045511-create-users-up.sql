@@ -17,16 +17,6 @@ CREATE INDEX users_email_index ON users(email);
 ALTER TABLE flashcards
   ADD COLUMN user_id integer;
 
-WITH dummy_user AS (
-  INSERT INTO users
-    (name, email, hashed_password, salt)
-    VALUES
-    ('dummy', 'dummy@email.com', 'xxx', 'xxx')
-    RETURNING id
-)
-UPDATE flashcards
-  SET user_id = (SELECT id FROM dummy_user);
-
 ALTER TABLE flashcards
   ADD FOREIGN KEY (user_id) REFERENCES users(id);
 
