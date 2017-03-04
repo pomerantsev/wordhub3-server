@@ -51,4 +51,4 @@ psql -d $2 \
      --host=$5 \
      --port=$6 \
      --username=$7 \
-     -c "ALTER TABLE flashcards ADD CONSTRAINT flashcards_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE; ALTER TABLE repetitions ADD CONSTRAINT repetitions_flashcard_uuid_fkey FOREIGN KEY (flashcard_uuid) REFERENCES flashcards(uuid) ON DELETE CASCADE;"
+     -c "ALTER TABLE flashcards ADD CONSTRAINT flashcards_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE; ALTER TABLE repetitions ADD CONSTRAINT repetitions_flashcard_uuid_fkey FOREIGN KEY (flashcard_uuid) REFERENCES flashcards(uuid) ON DELETE CASCADE; ALTER SEQUENCE users_id_seq RESTART WITH 100;"
