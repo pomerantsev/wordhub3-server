@@ -4,6 +4,9 @@
 # $2 - target database
 # $3 - dump file
 # $4 - db-migrate env
+# $5 - db host
+# $6 - db port
+# $7 - db username
 
 OUT_DUMP=./out-dump
 
@@ -29,14 +32,23 @@ db-migrate reset -e $4
 db-migrate up -e $4
 
 psql -d $2 \
+     --host=$5 \
+     --port=$6 \
+     --username=$7 \
      -c "ALTER TABLE flashcards DROP CONSTRAINT IF EXISTS flashcards_user_id_fkey; ALTER TABLE repetitions DROP CONSTRAINT IF EXISTS repetitions_flashcard_uuid_fkey;"
 
 pg_restore --exit-on-error \
            --dbname $2 \
+           --host=$5 \
+           --port=$6 \
+           --username=$7 \
            --table users \
            --table flashcards \
            --table repetitions \
-           ./scripts/out-dump
+           $OUT_DUMP
 
 psql -d $2 \
+     --host=$5 \
+     --port=$6 \
+     --username=$7 \
      -c "ALTER TABLE flashcards ADD CONSTRAINT flashcards_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE; ALTER TABLE repetitions ADD CONSTRAINT repetitions_flashcard_uuid_fkey FOREIGN KEY (flashcard_uuid) REFERENCES flashcards(uuid) ON DELETE CASCADE;"
