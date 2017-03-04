@@ -115,13 +115,15 @@ export async function createUser (user) {
   await query(`
     INSERT
     INTO users
-    (email, name, hashed_password, salt)
+    (email, name, hashed_password, salt, created_at, updated_at)
     VALUES
     (
       ${string(user.email)},
       ${stringOrNull(user.name)},
       ${string(user.hashedPassword)},
-      ${string(user.salt)}
+      ${string(user.salt)},
+      LOCALTIMESTAMP,
+      LOCALTIMESTAMP
     )
   `);
 }
@@ -131,7 +133,8 @@ export async function updateUser (id, user) {
     UPDATE users
     SET
       name = ${stringOrNull(user.name)},
-      daily_limit = ${integer(user.dailyLimit)}
+      daily_limit = ${integer(user.dailyLimit)},
+      updated_at = LOCALTIMESTAMP
     WHERE id = ${integer(id)}
   `);
 }
