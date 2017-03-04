@@ -6,6 +6,9 @@ import * as auth from './data/auth';
 import GetDataRoute from './routes/get-data';
 import SendDataRoute from './routes/send-data';
 import SyncDataRoute from './routes/sync-data';
+import GetUserRoute from './routes/get-user';
+import CreateUserRoute from './routes/create-user';
+import UpdateUserRoute from './routes/update-user';
 
 import LoginRoute from './routes/login';
 
@@ -37,6 +40,10 @@ export default function createServer (port) {
     bodyParser.json(),
     SyncDataRoute
   );
+
+  app.get('/v1/user', auth.viaToken, GetUserRoute);
+  app.post('/v1/user', bodyParser.json(), CreateUserRoute);
+  app.post('/v1/update-user', auth.viaToken, bodyParser.json(), UpdateUserRoute);
 
   return app.listen(port);
 }

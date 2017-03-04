@@ -111,6 +111,31 @@ export async function getUserByEmail (email) {
   return user;
 }
 
+export async function createUser (user) {
+  await query(`
+    INSERT
+    INTO users
+    (email, name, hashed_password, salt)
+    VALUES
+    (
+      ${string(user.email)},
+      ${stringOrNull(user.name)},
+      ${string(user.hashedPassword)},
+      ${string(user.salt)}
+    )
+  `);
+}
+
+export async function updateUser (id, user) {
+  await query(`
+    UPDATE users
+    SET
+      name = ${stringOrNull(user.name)},
+      daily_limit = ${integer(user.dailyLimit)}
+    WHERE id = ${integer(id)}
+  `);
+}
+
 export async function getAllUserIdsFromFlashcardUuids (flashcardUuids) {
   const userIds = flashcardUuids.length > 0 ?
     (await query(`

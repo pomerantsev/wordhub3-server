@@ -16,6 +16,10 @@ export function hashWithoutSalt (password) {
   return sha1(password);
 }
 
+export function generateSalt (email) {
+  return sha1(`Use ${email} with ${Date.now()} to make salt`);
+}
+
 export async function viaCredentials (email, password) {
   const foundUser = await data.getUserByEmail(email);
   if (foundUser) {
@@ -36,7 +40,14 @@ export function viaToken (req, res, next) {
     if (err) {
       res.status(401).json({success: false, message: 'Failed to authenticate token.'});
     } else {
-      req.user = decoded;
+      req.user = {
+        id: decoded.id,
+        name: decoded.name,
+        email: decoded.email,
+        dailyLimit: decoded.dailyLimit,
+        createdAt: new Date(decoded.createdAt).getTime(),
+        updatedAt: new Date(decoded.updatedAt).getTime()
+      };
       next();
     }
   });
