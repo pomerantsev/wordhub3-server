@@ -25,7 +25,9 @@ export async function viaCredentials (email, password) {
   if (foundUser) {
     if (foundUser.hashedPassword === hashPassword(password, foundUser.salt)) {
       // TODO: Implement token expiration
-      return jwt.sign(foundUser, process.env.JWT_SECRET);
+      return jwt.sign(foundUser, process.env.JWT_SECRET, {
+        expiresIn: '30 days'
+      });
     } else {
       return null;
     }
