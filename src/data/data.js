@@ -43,7 +43,10 @@ function float (num) {
 
 function string (str) {
   assert.equal(typeof str, 'string');
-  return '\'' + escape(str) + '\'';
+  // We need the E before the string because only then
+  // are escaped characters treated as we expect them to.
+  // https://www.postgresql.org/docs/9.6/static/sql-syntax-lexical.html
+  return 'E\'' + escape(str) + '\'';
 }
 
 function boolean (bool) {
