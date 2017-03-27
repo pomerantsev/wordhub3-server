@@ -74,8 +74,6 @@ rules:
   object-curly-spacing:
     - error
     - never
-  prefer-arrow-callback:
-    - error
   prefer-const:
     - error
   quotes:

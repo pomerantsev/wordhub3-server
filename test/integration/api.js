@@ -51,7 +51,6 @@ describe('api', () => {
         const res = await postLogin({email: 'email1@example.com', password: 'pass1'});
         assert.equal(200, res.status);
         const data = await res.json();
-        assert.isOk(data.success);
         assert.isOk(data.token);
       });
     });

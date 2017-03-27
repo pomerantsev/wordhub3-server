@@ -24,10 +24,12 @@ export async function viaCredentials (email, password) {
   const foundUser = await data.getUserByEmail(email);
   if (foundUser) {
     if (foundUser.hashedPassword === hashPassword(password, foundUser.salt)) {
-      // TODO: Implement token expiration
-      return jwt.sign(foundUser, process.env.JWT_SECRET, {
-        expiresIn: '30 days'
-      });
+      return {
+        user: foundUser,
+        token: jwt.sign({id: foundUser.id}, process.env.JWT_SECRET, {
+          expiresIn: '30 days'
+        })
+      };
     } else {
       return null;
     }
@@ -38,19 +40,17 @@ export async function viaCredentials (email, password) {
 
 export function viaToken (req, res, next) {
   const token = req.query.token;
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+  jwt.verify(token, process.env.JWT_SECRET, async function (err, decoded) {
     if (err) {
       res.status(401).json({success: false, message: 'Failed to authenticate token.'});
     } else {
-      req.user = {
-        id: decoded.id,
-        name: decoded.name,
-        email: decoded.email,
-        dailyLimit: decoded.dailyLimit,
-        createdAt: new Date(decoded.createdAt).getTime(),
-        updatedAt: new Date(decoded.updatedAt).getTime()
-      };
-      next();
+      const user = await data.getUserById(decoded.id);
+      if (user) {
+        req.user = user;
+        next();
+      } else {
+        res.status(401).json({success: false, message: 'Failed to authenticate token.'});
+      }
     }
   });
 }

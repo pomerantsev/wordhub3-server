@@ -6,9 +6,12 @@ export default async function LoginRoute (req, res) {
     return;
   }
   try {
-    const token = await auth.viaCredentials(req.body.email, req.body.password);
-    if (token) {
-      res.json({success: true, token});
+    const authInfo = await auth.viaCredentials(req.body.email, req.body.password);
+    if (authInfo) {
+      res.json({
+        token: authInfo.token,
+        userId: authInfo.user && authInfo.user.id
+      });
     } else {
       res.status(401).json({message: 'Incorrect login data'});
     }

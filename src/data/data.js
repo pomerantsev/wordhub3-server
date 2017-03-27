@@ -114,6 +114,16 @@ export async function getUserByEmail (email) {
   return user;
 }
 
+export async function getUserById (id) {
+  const user = (await query(`
+    SELECT *
+    FROM users
+    WHERE id = ${integer(id)}
+  `)).rows[0];
+
+  return user;
+}
+
 export async function createUser (user) {
   await query(`
     INSERT
