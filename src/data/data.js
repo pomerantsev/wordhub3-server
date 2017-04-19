@@ -236,6 +236,18 @@ export async function getAllFlashcardsAndRepetitions (userId, timestamp) {
  */
 export async function syncData (userId, requestBody) {
   const {flashcards, repetitions} = requestBody;
+
+  // There can be two legitimate types of conflicts for repetitions:
+  // - updating an existing repetition (the most basic conflict,
+  // happening every time a repetition is run)
+  // - creating a repetition for the same flashcard
+  // on a different client (a much less frequent case)
+  // In both cases flashcard_uuid and seq should be the same,
+  // so we can just update the repetition anyway and worry little
+  // about the second case (the two versions of the repetition
+  // have the same weight, so it's okay to overwrite the previous version).
+  // The client should take care of this situation (a repetition with
+  // the original uuid being removed).
   const queryText = `
     BEGIN;
 
