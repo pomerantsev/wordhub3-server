@@ -21,14 +21,23 @@ export default async function CreateUserRoute (req, res) {
 
     const salt = auth.generateSalt(email);
     const hashedPassword = auth.hashPassword(password, salt);
-    console.log(salt, hashedPassword);
     await data.createUser({
       email,
       name,
       hashedPassword,
       salt
     });
-    res.sendStatus(201);
+    const authInfo = await auth.viaCredentials(email, password);
+    if (authInfo) {
+      res.json({
+        token: authInfo.token,
+        userId: authInfo.user && authInfo.user.id
+      });
+    } else {
+      // We shouldn't be getting here - it means that
+      // the user has been created but cannot be found.
+      res.status(500);
+    }
   } catch (e) {
     res.status(400).json({error: e.message});
   }
