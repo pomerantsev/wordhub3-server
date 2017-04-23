@@ -38,6 +38,10 @@ UPDATE repetitions
   SET successful = FALSE
   WHERE successful IS NULL;
 
+UPDATE repetitions
+  SET actual_date = NULL
+  WHERE run = FALSE;
+
 ALTER TABLE repetitions
   DROP COLUMN id,
   DROP COLUMN flashcard_id,
