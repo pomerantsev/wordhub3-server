@@ -30,7 +30,7 @@ ALTER TABLE repetitions
 UPDATE repetitions
   SET uuid = id,
     flashcard_uuid = flashcard_id,
-    planned_day = DATE_PART('day', planned_date::timestamp - '2012-01-01'::timestamp),
+    planned_day = DATE_PART('day', actual_date::timestamp - '2012-01-01'::timestamp),
     -- We will have to make sure in the client that large seq ids are handled correctly
     seq = id;
 
