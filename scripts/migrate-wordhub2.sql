@@ -11,7 +11,8 @@ UPDATE users
   WHERE salt IS NULL;
 
 ALTER TABLE flashcards
-  ADD COLUMN uuid text;
+  ADD COLUMN uuid text,
+  ADD COLUMN creation_day integer;
 
 UPDATE flashcards
   SET uuid = id;
@@ -33,6 +34,15 @@ UPDATE repetitions
     planned_day = DATE_PART('day', actual_date::timestamp - '2012-01-01'::timestamp),
     -- We will have to make sure in the client that large seq ids are handled correctly
     seq = id;
+
+UPDATE flashcards AS f
+  SET creation_day =
+    (SELECT planned_day FROM repetitions AS r WHERE r.flashcard_uuid = f.uuid ORDER BY r.created_at LIMIT 1) -
+      DATE_PART(
+        'day',
+        (SELECT planned_date FROM repetitions AS r WHERE r.flashcard_uuid = f.uuid ORDER BY r.created_at LIMIT 1)::timestamp -
+          DATE_TRUNC('day', created_at)
+      );
 
 UPDATE repetitions
   SET successful = FALSE

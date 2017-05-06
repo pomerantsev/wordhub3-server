@@ -98,7 +98,7 @@ describe('api', () => {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({
-            flashcards: [{uuid: 'new', frontText: 'some text'}],
+            flashcards: [{uuid: 'new', frontText: 'some text', creationDay: 1}],
             repetitions: []
           })
         });
@@ -118,7 +118,7 @@ describe('api', () => {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
               body: JSON.stringify({
-                flashcards: [{uuid: 'new', frontText: 'some text', backText: 'some back text'}],
+                flashcards: [{uuid: 'new', frontText: 'some text', backText: 'some back text', creationDay: 1}],
                 repetitions: []
               })
             });
@@ -134,9 +134,9 @@ describe('api', () => {
               headers: {'Content-Type': 'application/json'},
               body: JSON.stringify({
                 flashcards: [{
-                  uuid: 'new', frontText: 'some text', backText: 'some back text'
+                  uuid: 'new', frontText: 'some text', backText: 'some back text', creationDay: 1
                 }, {
-                  uuid: 'fl11', frontText: 'new text', backText: 'new back text'
+                  uuid: 'fl11', frontText: 'new text', backText: 'new back text', creationDay: 1
                 }],
                 repetitions: []
               })

@@ -74,12 +74,12 @@ export async function seed () {
       (1, '${email1}', '${hashedPassword1}', '${salt1}'),
       (2, '${email2}', '${hashedPassword2}', '${salt2}');
     INSERT INTO flashcards
-      (user_id, uuid, updated_at)
+      (user_id, uuid, creation_day, updated_at)
       VALUES
-      (1, 'fl11', to_timestamp(1)),
-      (1, 'fl12', to_timestamp(5)),
-      (2, 'fl21', to_timestamp(2)),
-      (2, 'fl22', to_timestamp(6));
+      (1, 'fl11', 1, to_timestamp(1)),
+      (1, 'fl12', 5, to_timestamp(5)),
+      (2, 'fl21', 2, to_timestamp(2)),
+      (2, 'fl22', 6, to_timestamp(6));
     INSERT INTO repetitions
       (flashcard_uuid, uuid, seq, planned_day, updated_at)
       VALUES

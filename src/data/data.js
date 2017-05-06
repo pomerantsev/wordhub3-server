@@ -254,7 +254,7 @@ export async function syncData (userId, requestBody) {
     ${flashcards.length ?
       `
         INSERT INTO flashcards
-          (user_id, uuid, front_text, back_text, deleted, created_at, updated_at)
+          (user_id, uuid, front_text, back_text, creation_day, deleted, created_at, updated_at)
           VALUES
           ${flashcards.map(flashcard =>
             `(
@@ -262,6 +262,7 @@ export async function syncData (userId, requestBody) {
               ${string(flashcard.uuid)},
               ${string(flashcard.frontText)},
               ${string(flashcard.backText)},
+              ${integer(flashcard.creationDay)},
               ${boolean(flashcard.deleted)},
               LOCALTIMESTAMP,
               LOCALTIMESTAMP
