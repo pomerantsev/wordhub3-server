@@ -168,7 +168,7 @@ export async function getAllUserIdsFromFlashcardUuids (flashcardUuids) {
 async function getAllFlashcards (userId, timestamp) {
   const rawData = (await query(
     `
-      SELECT uuid, front_text, back_text, deleted, (extract(epoch FROM created_at) * 1000) AS created_at, (extract(epoch FROM updated_at) * 1000) AS updated_at
+      SELECT uuid, front_text, back_text, creation_day, deleted, (extract(epoch FROM created_at) * 1000) AS created_at, (extract(epoch FROM updated_at) * 1000) AS updated_at
       FROM flashcards
       WHERE user_id = ${integer(userId)}
     ` + (timestamp ? `AND floor(extract(epoch FROM updated_at) * 1000) > floor(${float(timestamp)})\n` : '') +
@@ -203,6 +203,7 @@ export async function getAllFlashcardsAndRepetitions (userId, timestamp) {
       uuid: flashcard.uuid,
       frontText: flashcard.frontText,
       backText: flashcard.backText,
+      creationDay: flashcard.creationDay,
       deleted: flashcard.deleted,
       createdAt: flashcard.createdAt,
       updatedAt: flashcard.updatedAt
