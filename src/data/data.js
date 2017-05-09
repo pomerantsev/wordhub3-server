@@ -128,13 +128,14 @@ export async function createUser (user) {
   await query(`
     INSERT
     INTO users
-    (email, name, hashed_password, salt, created_at, updated_at)
+    (email, name, hashed_password, salt, interface_language_cd, created_at, updated_at)
     VALUES
     (
       ${string(user.email)},
       ${stringOrNull(user.name)},
       ${string(user.hashedPassword)},
       ${string(user.salt)},
+      ${integer(user.interfaceLanguageCd)},
       LOCALTIMESTAMP,
       LOCALTIMESTAMP
     )

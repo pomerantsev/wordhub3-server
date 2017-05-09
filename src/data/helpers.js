@@ -21,3 +21,14 @@ export function nameIsValid (name) {
 export function dailyLimitIsValid (dailyLimit) {
   return Number(dailyLimit) > 0 && Math.floor(dailyLimit) === dailyLimit;
 }
+
+export function getLanguageEnum (language) {
+  switch (language) {
+  case 'ru':
+    return 0;
+  case 'en':
+    return 1;
+  default:
+    return 1;
+  }
+}

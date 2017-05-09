@@ -21,11 +21,13 @@ export default async function CreateUserRoute (req, res) {
 
     const salt = auth.generateSalt(email);
     const hashedPassword = auth.hashPassword(password, salt);
+    const interfaceLanguageCd = helpers.getLanguageEnum(req.body.language);
     await data.createUser({
       email,
       name,
       hashedPassword,
-      salt
+      salt,
+      interfaceLanguageCd
     });
     const authInfo = await auth.viaCredentials(email, password);
     if (authInfo) {
