@@ -31,6 +31,6 @@ export default async function SyncDataRoute (req, res) {
 
     res.send(flashcardsAndRepetitionsWithoutCurrentlyReceived);
   } catch (e) {
-    res.status(400).json({error: e.message});
+    res.status(400).json({errorCode: 0, message: e.message});
   }
 }
