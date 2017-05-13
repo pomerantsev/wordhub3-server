@@ -166,23 +166,49 @@ export async function getAllUserIdsFromFlashcardUuids (flashcardUuids) {
   return userIds;
 }
 
-async function getAllFlashcards (userId, timestamp) {
-  const rawData = (await query(
+// We only use union here instead of two separate queries to flashcards and repetitions
+// to ensure that no flashcard or repetition is lost.
+// Which could have happened when two separate queries were made. For example:
+// - flashcards query returns at timestamp 10;
+// - a new flashcard is created at timestamp 15;
+// - repetitions query returns at timestamp 20;
+// - 20 is sent to client as updatedAt
+// - client uses 20 as timestamp next time
+// - the flashcard created at 15 never gets to the client.
+export async function getAllFlashcardsAndRepetitions (userId, timestamp) {
+  const rows = (await query(
     `
-      SELECT uuid, front_text, back_text, creation_day, deleted, (extract(epoch FROM created_at) * 1000) AS created_at, (extract(epoch FROM updated_at) * 1000) AS updated_at
+      SELECT
+        uuid,
+        front_text AS f_front_text,
+        back_text AS f_back_text,
+        creation_day AS f_creation_day,
+        deleted AS f_deleted,
+        '' AS r_flashcard_uuid,
+        -1 AS r_seq,
+        -1 AS r_planned_day,
+        to_date('01-01-0001', 'DD-MM-YYYY') AS r_actual_date,
+        NULL AS r_successful,
+        (extract(epoch FROM created_at) * 1000) AS created_at,
+        (extract(epoch FROM updated_at) * 1000) AS updated_at
       FROM flashcards
       WHERE user_id = ${integer(userId)}
     ` + (timestamp ? `AND floor(extract(epoch FROM updated_at) * 1000) > floor(${float(timestamp)})\n` : '') +
-    'ORDER BY created_at'
-  )).rows;
-
-  return rawData;
-}
-
-async function getAllRepetitions (userId, timestamp) {
-  const rawData = (await query(
+    'UNION' +
     `
-      SELECT uuid, flashcard_uuid, seq, planned_day, actual_date, successful, (extract(epoch FROM created_at) * 1000) AS created_at, (extract(epoch FROM updated_at) * 1000) AS updated_at
+      SELECT
+        uuid,
+        '' AS f_front_text,
+        '' AS f_back_text,
+        -1 AS f_creation_day,
+        NULL AS f_deleted,
+        flashcard_uuid AS r_flashcard_uuid,
+        seq AS r_seq,
+        planned_day AS r_planned_day,
+        actual_date AS r_actual_date,
+        successful AS r_successful,
+        (extract(epoch FROM created_at) * 1000) AS created_at,
+        (extract(epoch FROM updated_at) * 1000) AS updated_at
       FROM repetitions
       WHERE flashcard_uuid IN (SELECT uuid FROM flashcards WHERE user_id = ${integer(userId)})
     ` +
@@ -190,38 +216,32 @@ async function getAllRepetitions (userId, timestamp) {
     'ORDER BY created_at'
   )).rows;
 
-  return rawData;
-}
-
-export async function getAllFlashcardsAndRepetitions (userId, timestamp) {
-  // TODO: Make it fully consistent (single call to db).
-  const flashcards = await getAllFlashcards(userId, timestamp);
-  const repetitions = await getAllRepetitions(userId, timestamp);
-  const maxFlashcardTimestamp = flashcards.reduce((prev, cur) => Math.max(prev, cur.updatedAt), 0);
-  const maxRepetitionTimestamp = repetitions.reduce((prev, cur) => Math.max(prev, cur.updatedAt), 0);
+  const flashcards = rows.filter(row => row.rSeq === -1);
+  const repetitions = rows.filter(row => row.fCreationDay === -1);
+  const maxTimestamp = rows.reduce((prev, cur) => Math.max(prev, cur.updatedAt), 0);
   return {
     flashcards: flashcards.map(flashcard => ({
       uuid: flashcard.uuid,
-      frontText: flashcard.frontText,
-      backText: flashcard.backText,
-      creationDay: flashcard.creationDay,
-      deleted: flashcard.deleted,
+      frontText: flashcard.fFrontText,
+      backText: flashcard.fBackText,
+      creationDay: flashcard.fCreationDay,
+      deleted: flashcard.fDeleted,
       createdAt: flashcard.createdAt,
       updatedAt: flashcard.updatedAt
     })),
     repetitions: repetitions.map(repetition => ({
       uuid: repetition.uuid,
-      flashcardUuid: repetition.flashcardUuid,
-      seq: repetition.seq,
-      plannedDay: repetition.plannedDay,
-      actualDate: repetition.actualDate ?
-        moment(repetition.actualDate).format('YYYY-MM-DD') :
+      flashcardUuid: repetition.rFlashcardUuid,
+      seq: repetition.rSeq,
+      plannedDay: repetition.rPlannedDay,
+      actualDate: repetition.rActualDate ?
+        moment(repetition.rActualDate).format('YYYY-MM-DD') :
         null,
-      successful: repetition.successful,
+      successful: repetition.rSuccessful,
       createdAt: repetition.createdAt,
       updatedAt: repetition.updatedAt
     })),
-    updatedAt: Math.max(maxFlashcardTimestamp, maxRepetitionTimestamp, (timestamp || 0))
+    updatedAt: Math.max(maxTimestamp, (timestamp || 0))
   };
 }
 
