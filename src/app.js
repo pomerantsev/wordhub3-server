@@ -14,9 +14,11 @@ import LoginRoute from './routes/login';
 
 import express from 'express';
 import bodyParser from 'body-parser';
+import compression from 'compression';
 
 export default function createServer (port) {
   const app = express();
+  app.use(compression());
 
   app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');

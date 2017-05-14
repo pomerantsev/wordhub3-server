@@ -19,6 +19,7 @@
     "babel-preset-es2015-node6": "0.3.0",
     "babel-register": "6.18.0",
     "body-parser": "^1.15.2",
+    "compression": "^1.6.2",
     "db-migrate": "^0.10.0-beta.20",
     "db-migrate-pg": "^0.1.11",
     "dotenv": "^2.0.0",
