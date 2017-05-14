@@ -26,9 +26,7 @@ export async function viaCredentials (email, password) {
     if (foundUser.hashedPassword === hashPassword(password, foundUser.salt)) {
       return {
         user: foundUser,
-        token: jwt.sign({id: foundUser.id}, process.env.JWT_SECRET, {
-          expiresIn: '30 days'
-        })
+        token: jwt.sign({id: foundUser.id}, process.env.JWT_SECRET)
       };
     } else {
       return null;
