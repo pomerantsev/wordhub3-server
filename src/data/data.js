@@ -245,6 +245,19 @@ export async function getAllFlashcardsAndRepetitions (userId, timestamp) {
   };
 }
 
+export async function getAllData (userId, timestamp) {
+  return Promise.all([
+    getAllFlashcardsAndRepetitions(userId, timestamp),
+    getUserById(userId)
+  ]).then(([flashcardsAndRepetitions, userData]) => Object.assign({}, flashcardsAndRepetitions, {
+    userSettings: {
+      dailyLimit: userData.dailyLimit,
+      name: userData.name,
+      interfaceLanguageCd: userData.interfaceLanguageCd
+    }
+  }));
+}
+
 /**
  * This function accepts two arrays (with flashcards and repetitions).
  * It doesn't throw only if input is valid:
