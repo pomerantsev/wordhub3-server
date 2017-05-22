@@ -12,6 +12,7 @@ UPDATE users
 
 ALTER TABLE flashcards
   ADD COLUMN uuid text,
+  ADD COLUMN creation_date text,
   ADD COLUMN creation_day integer;
 
 UPDATE flashcards
@@ -36,13 +37,15 @@ UPDATE repetitions
     seq = id;
 
 UPDATE flashcards AS f
-  SET creation_day =
-    (SELECT planned_day FROM repetitions AS r WHERE r.flashcard_uuid = f.uuid ORDER BY r.created_at LIMIT 1) -
-      DATE_PART(
-        'day',
-        (SELECT planned_date FROM repetitions AS r WHERE r.flashcard_uuid = f.uuid ORDER BY r.created_at LIMIT 1)::timestamp -
-          DATE_TRUNC('day', created_at)
-      );
+  SET
+    creation_date = to_char(f.created_at, 'YYYY-MM-DD'),
+    creation_day =
+      (SELECT planned_day FROM repetitions AS r WHERE r.flashcard_uuid = f.uuid ORDER BY r.created_at LIMIT 1) -
+        DATE_PART(
+          'day',
+          (SELECT planned_date FROM repetitions AS r WHERE r.flashcard_uuid = f.uuid ORDER BY r.created_at LIMIT 1)::timestamp -
+            DATE_TRUNC('day', created_at)
+        );
 
 UPDATE repetitions
   SET successful = FALSE

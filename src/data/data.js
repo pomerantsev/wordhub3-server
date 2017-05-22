@@ -182,6 +182,7 @@ export async function getAllFlashcardsAndRepetitions (userId, timestamp) {
         uuid,
         front_text AS f_front_text,
         back_text AS f_back_text,
+        creation_date AS f_creation_date,
         creation_day AS f_creation_day,
         deleted AS f_deleted,
         '' AS r_flashcard_uuid,
@@ -200,6 +201,7 @@ export async function getAllFlashcardsAndRepetitions (userId, timestamp) {
         uuid,
         '' AS f_front_text,
         '' AS f_back_text,
+        '' AS f_creation_date,
         -1 AS f_creation_day,
         NULL AS f_deleted,
         flashcard_uuid AS r_flashcard_uuid,
@@ -224,6 +226,7 @@ export async function getAllFlashcardsAndRepetitions (userId, timestamp) {
       uuid: flashcard.uuid,
       frontText: flashcard.fFrontText,
       backText: flashcard.fBackText,
+      creationDate: flashcard.fCreationDate,
       creationDay: flashcard.fCreationDay,
       deleted: flashcard.fDeleted,
       createdAt: flashcard.createdAt,
@@ -289,7 +292,7 @@ export async function syncData (userId, requestBody) {
     ${flashcards.length ?
       `
         INSERT INTO flashcards
-          (user_id, uuid, front_text, back_text, creation_day, deleted, created_at, updated_at)
+          (user_id, uuid, front_text, back_text, creation_date, creation_day, deleted, created_at, updated_at)
           VALUES
           ${flashcards.map(flashcard =>
             `(
@@ -297,6 +300,7 @@ export async function syncData (userId, requestBody) {
               ${string(flashcard.uuid)},
               ${string(flashcard.frontText)},
               ${string(flashcard.backText)},
+              ${string(flashcard.creationDate)},
               ${integer(flashcard.creationDay)},
               ${boolean(flashcard.deleted)},
               LOCALTIMESTAMP,
