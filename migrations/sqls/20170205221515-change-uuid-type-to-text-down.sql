@@ -1,5 +1,3 @@
-BEGIN;
-
 TRUNCATE TABLE flashcards CASCADE;
 
 ALTER TABLE repetitions
@@ -14,5 +12,3 @@ ALTER TABLE flashcards
 ALTER TABLE repetitions
   ADD COLUMN uuid uuid PRIMARY KEY,
   ADD COLUMN flashcard_uuid uuid REFERENCES flashcards(uuid) ON DELETE CASCADE;
-
-COMMIT;

@@ -1,5 +1,3 @@
-BEGIN;
-
 CREATE TABLE flashcards (
   id serial PRIMARY KEY
 );
@@ -12,5 +10,3 @@ CREATE TABLE repetitions (
   actual_date date,
   UNIQUE (flashcard_id, seq)
 );
-
-COMMIT;

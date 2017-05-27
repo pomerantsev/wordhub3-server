@@ -1,5 +1,3 @@
-BEGIN;
-
 DROP TABLE events;
 
 ALTER TABLE repetitions
@@ -26,5 +24,3 @@ ALTER TABLE repetitions
   ADD CONSTRAINT repetitions_flashcard_uuid_seq_key UNIQUE (flashcard_uuid, seq),
   ADD COLUMN created_at timestamptz,
   ADD COLUMN updated_at timestamptz;
-
-COMMIT;

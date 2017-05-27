@@ -1,5 +1,3 @@
-BEGIN;
-
 CREATE TABLE users (
   id serial PRIMARY KEY,
   name varchar(25),
@@ -19,5 +17,3 @@ ALTER TABLE flashcards
 
 ALTER TABLE flashcards
   ADD FOREIGN KEY (user_id) REFERENCES users(id);
-
-COMMIT;

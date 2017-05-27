@@ -1,5 +1,3 @@
-BEGIN;
-
 DROP INDEX repetitions_updated_at_index;
 
 DROP INDEX repetitions_created_at_index;
@@ -18,5 +16,3 @@ ALTER TABLE repetitions
 ALTER TABLE flashcards
   DROP COLUMN deleted,
   DROP COLUMN back_text;
-
-COMMIT;

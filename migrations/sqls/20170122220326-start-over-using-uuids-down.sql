@@ -1,5 +1,3 @@
-BEGIN;
-
 ALTER TABLE repetitions
   DROP CONSTRAINT IF EXISTS repetitions_flashcard_uuid_fkey;
 
@@ -31,5 +29,3 @@ CREATE TABLE events (
   action text NOT NULL,
   updates jsonb
 );
-
-COMMIT;
