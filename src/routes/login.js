@@ -1,8 +1,15 @@
 import * as auth from '../data/auth';
 
 export default async function LoginRoute (req, res) {
+  function sendIncorrectLogin () {
+    res.status(401).json({
+      errorCode: 1,
+      message: 'Incorrect login data'
+    });
+  }
+
   if (!req.body || !req.body.email || !req.body.password) {
-    res.status(401).json({message: 'Incorrect login data'});
+    sendIncorrectLogin();
     return;
   }
   try {
@@ -13,7 +20,7 @@ export default async function LoginRoute (req, res) {
         userId: authInfo.user && authInfo.user.id
       });
     } else {
-      res.status(401).json({message: 'Incorrect login data'});
+      sendIncorrectLogin();
     }
   } catch (e) {
     res.status(500).json({error: e});
