@@ -1,21 +1,30 @@
 import * as data from '../data/data';
 import * as helpers from '../data/helpers';
 import * as auth from '../data/auth';
+import * as constants from '../data/constants';
 
 export default async function CreateUserRoute (req, res) {
   try {
     const email = req.body.email && req.body.email.toLowerCase();
     const password = req.body.password;
     const name = req.body.name;
-    if (!helpers.emailIsValid(email) ||
-        !helpers.passwordIsValid(password) ||
-        !helpers.nameIsValid(name)) {
-      res.status(403).json({error: 'Invalid data'});
+    try {
+      helpers.validateEmail(email);
+      helpers.validatePassword(password);
+      helpers.validateName(name);
+    } catch (e) {
+      res.status(403).json({
+        errorCode: e.errorCode,
+        message: e.message
+      });
       return;
     }
     const foundUser = await data.getUserByEmail(email);
     if (foundUser) {
-      res.status(403).json({error: 'User exists'});
+      res.status(403).json({
+        errorCode: constants.SIGNUP_EXISTING_USER,
+        message: 'User exists.'
+      });
       return;
     }
 
@@ -31,7 +40,7 @@ export default async function CreateUserRoute (req, res) {
     });
     const authInfo = await auth.viaCredentials(email, password);
     if (authInfo) {
-      res.json({
+      res.status(201).json({
         token: authInfo.token,
         userId: authInfo.user && authInfo.user.id
       });
@@ -41,6 +50,6 @@ export default async function CreateUserRoute (req, res) {
       res.status(500);
     }
   } catch (e) {
-    res.status(400).json({error: e.message});
+    res.status(500).json({error: e.message});
   }
 }

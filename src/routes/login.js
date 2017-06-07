@@ -1,9 +1,10 @@
 import * as auth from '../data/auth';
+import * as constants from '../data/constants';
 
 export default async function LoginRoute (req, res) {
   function sendIncorrectLogin () {
     res.status(401).json({
-      errorCode: 1,
+      errorCode: constants.LOGIN_INCORRECT_DATA,
       message: 'Incorrect login data'
     });
   }
