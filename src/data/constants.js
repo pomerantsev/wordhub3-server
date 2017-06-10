@@ -7,3 +7,9 @@ export const SIGNUP_PASSWORD_TOO_LONG = 4;
 export const SIGNUP_PASSWORD_INVALID = 5;
 export const SIGNUP_NAME_TOO_LONG = 6;
 export const SIGNUP_EXISTING_USER = 7;
+
+export const MAX_EMAIL_LENGTH = 100;
+export const MIN_PASSWORD_LENGTH = 6;
+export const MAX_PASSWORD_LENGTH = 25;
+export const MAX_NAME_LENGTH = 25;
+export const PASSWORD_REGEX = /^[0-9a-zA-Z]+$/;

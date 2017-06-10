@@ -1,11 +1,5 @@
 import * as constants from './constants';
 
-const MAX_EMAIL_LENGTH = 100;
-const MIN_PASSWORD_LENGTH = 6;
-const MAX_PASSWORD_LENGTH = 25;
-const MAX_NAME_LENGTH = 25;
-const PASSWORD_REGEX = /^[0-9a-zA-Z]+$/;
-
 export function getUniqueFlashcardUuids (flashcards, repetitions) {
   const flashcardUuids = flashcards.map(flashcard => flashcard.uuid);
   const repetitionFlashcardUuids = repetitions.map(rep => rep.flashcardUuid);
@@ -19,7 +13,7 @@ export function validateEmail (email) {
       errorCode: constants.SIGNUP_EMAIL_INVALID,
       message: 'Email is invalid (either has a zero length or doesn’t have an @ character.'
     });
-  } else if (email.length > MAX_EMAIL_LENGTH) {
+  } else if (email.length > constants.MAX_EMAIL_LENGTH) {
     throw ({
       errorCode: constants.SIGNUP_EMAIL_TOO_LONG,
       message: 'Email is too long'
@@ -28,17 +22,17 @@ export function validateEmail (email) {
 }
 
 export function validatePassword (password) {
-  if (password.length < MIN_PASSWORD_LENGTH) {
+  if (password.length < constants.MIN_PASSWORD_LENGTH) {
     throw ({
       errorCode: constants.SIGNUP_PASSWORD_TOO_SHORT,
       message: 'Password is too short'
     });
-  } else if (password.length > MAX_PASSWORD_LENGTH) {
+  } else if (password.length > constants.MAX_PASSWORD_LENGTH) {
     throw ({
       errorCode: constants.SIGNUP_PASSWORD_TOO_LONG,
       message: 'Password is too long'
     });
-  } else if (!password.match(PASSWORD_REGEX)) {
+  } else if (!password.match(constants.PASSWORD_REGEX)) {
     throw ({
       errorCode: constants.SIGNUP_PASSWORD_INVALID,
       message: 'Password is invalid'
@@ -47,7 +41,7 @@ export function validatePassword (password) {
 }
 
 export function validateName (name) {
-  if (name && name.length > MAX_NAME_LENGTH) {
+  if (name && name.length > constants.MAX_NAME_LENGTH) {
     throw ({
       errorCode: constants.SIGNUP_NAME_TOO_LONG,
       message: 'Name is too long'
