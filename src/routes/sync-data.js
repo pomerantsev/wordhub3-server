@@ -18,11 +18,11 @@ export default async function SyncDataRoute (req, res) {
     // Insert flashcards and repetitions that we received from client.
     await data.syncData(req.user.id, req.body);
 
-    // Get all flashcards and repetitions created after the server timestamp
+    // Get all flashcards and repetitions updated after the server timestamp
     // client submitted with the request.
     const allData = await data.getAllData(req.user.id, timestamp);
 
-    // Filter out flashcards and repetitions that were created during current request.
+    // Filter out flashcards and repetitions that were updated during current request.
     const allDataWithoutCurrentlyReceivedFlashcardsAndRepetitions = Object.assign({}, allData, {
       flashcards: allData.flashcards.filter(flashcard =>
         !reqFlashcards.find(reqFlashcard => reqFlashcard.uuid === flashcard.uuid)),
