@@ -22,7 +22,7 @@ export default async function CreateUserRoute (req, res) {
     const foundUser = await data.getUserByEmail(email);
     if (foundUser) {
       res.status(403).json({
-        errorCode: constants.SIGNUP_EXISTING_USER,
+        errorCode: constants.ERROR_EXISTING_USER,
         message: 'User exists.'
       });
       return;
@@ -30,13 +30,13 @@ export default async function CreateUserRoute (req, res) {
 
     const salt = auth.generateSalt(email);
     const hashedPassword = auth.hashPassword(password, salt);
-    const interfaceLanguageCd = helpers.getLanguageEnum(req.body.language);
+    const interfaceLanguageId = helpers.getLanguageEnum(req.body.language);
     await data.createUser({
       email,
       name,
       hashedPassword,
       salt,
-      interfaceLanguageCd
+      interfaceLanguageId
     });
     const authInfo = await auth.viaCredentials(email, password);
     if (authInfo) {
@@ -47,9 +47,15 @@ export default async function CreateUserRoute (req, res) {
     } else {
       // We shouldn't be getting here - it means that
       // the user has been created but cannot be found.
-      res.status(500);
+      res.status(500).json({
+        errorCode: constants.ERROR_SERVER_GENERIC,
+        message: 'Server error'
+      });
     }
   } catch (e) {
-    res.status(500).json({error: e.message});
+    res.status(500).json({
+      errorCode: constants.ERROR_SERVER_GENERIC,
+      message: e.message
+    });
   }
 }

@@ -4,7 +4,7 @@ import * as constants from '../data/constants';
 export default async function LoginRoute (req, res) {
   function sendIncorrectLogin () {
     res.status(401).json({
-      errorCode: constants.LOGIN_INCORRECT_DATA,
+      errorCode: constants.ERROR_LOGIN_INCORRECT_DATA,
       message: 'Incorrect login data'
     });
   }
@@ -24,7 +24,10 @@ export default async function LoginRoute (req, res) {
       sendIncorrectLogin();
     }
   } catch (e) {
-    res.status(500).json({error: e});
+    res.status(500).json({
+      errorCode: constants.ERROR_SERVER_GENERIC,
+      message: e
+    });
   }
 
 }

@@ -128,14 +128,14 @@ export async function createUser (user) {
   await query(`
     INSERT
     INTO users
-    (email, name, hashed_password, salt, interface_language_cd, created_at, updated_at)
+    (email, name, hashed_password, salt, interface_language_id, created_at, updated_at)
     VALUES
     (
       ${string(user.email)},
       ${stringOrNull(user.name)},
       ${string(user.hashedPassword)},
       ${string(user.salt)},
-      ${integer(user.interfaceLanguageCd)},
+      ${integer(user.interfaceLanguageId)},
       LOCALTIMESTAMP,
       LOCALTIMESTAMP
     )
@@ -148,6 +148,7 @@ export async function updateUser (id, user) {
     SET
       name = ${stringOrNull(user.name)},
       daily_limit = ${integer(user.dailyLimit)},
+      interface_language_id = ${integer(user.interfaceLanguageId)},
       updated_at = LOCALTIMESTAMP
     WHERE id = ${integer(id)}
   `);
@@ -256,7 +257,7 @@ export async function getAllData (userId, timestamp) {
     userSettings: {
       dailyLimit: userData.dailyLimit,
       name: userData.name,
-      interfaceLanguageCd: userData.interfaceLanguageCd
+      interfaceLanguageId: userData.interfaceLanguageId
     }
   }));
 }

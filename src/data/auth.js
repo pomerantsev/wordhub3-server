@@ -2,6 +2,7 @@ import sha1 from 'sha1';
 import jwt from 'jsonwebtoken';
 
 import * as data from './data';
+import * as constants from './constants';
 
 export function hashPassword (password, salt) {
   // This branching is here for historical reasons.
@@ -40,14 +41,23 @@ export function viaToken (req, res, next) {
   const token = req.query.token;
   jwt.verify(token, process.env.JWT_SECRET, async function (err, decoded) {
     if (err) {
-      res.status(401).json({success: false, message: 'Failed to authenticate token.'});
+      // Issue a 'Token expired' if token is invalid,
+      // because that's most likely what it is.
+      res.status(401).json({
+        errorCode: constants.ERROR_TOKEN_EXPIRED,
+        message: 'Failed to authenticate token.'
+      });
     } else {
       const user = await data.getUserById(decoded.id);
       if (user) {
         req.user = user;
         next();
       } else {
-        res.status(401).json({success: false, message: 'Failed to authenticate token.'});
+        // We also issue a 'Token expired' error if user doesn't exist any more
+        res.status(401).json({
+          errorCode: constants.ERROR_TOKEN_EXPIRED,
+          message: 'Failed to authenticate token.'
+        });
       }
     }
   });

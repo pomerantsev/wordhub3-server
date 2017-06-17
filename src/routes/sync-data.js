@@ -1,5 +1,6 @@
 import * as data from '../data/data';
 import * as helpers from '../data/helpers';
+import * as constants from '../data/constants';
 
 export default async function SyncDataRoute (req, res) {
   try {
@@ -31,6 +32,9 @@ export default async function SyncDataRoute (req, res) {
 
     res.send(allDataWithoutCurrentlyReceivedFlashcardsAndRepetitions);
   } catch (e) {
-    res.status(400).json({errorCode: 0, message: e.message});
+    res.status(400).json({
+      errorCode: constants.ERROR_SYNC,
+      message: e.message
+    });
   }
 }
