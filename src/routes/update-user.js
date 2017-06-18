@@ -23,7 +23,9 @@ export default async function UpdateUserRoute (req, res) {
       dailyLimit,
       interfaceLanguageId
     });
-    res.sendStatus(204);
+    res.status(200).json({
+      success: true
+    });
   } catch (e) {
     // We've tried our best to validate values,
     // so we're not sure how to handle an updateUser error

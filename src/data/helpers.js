@@ -77,3 +77,11 @@ export function getLanguageEnum (name) {
     foundLanguage.id :
     constants.DEFAULT_INTERFACE_LANGUAGE_ID;
 }
+
+export function getUserSettings (user) {
+  return {
+    dailyLimit: user.dailyLimit,
+    name: user.name,
+    interfaceLanguageId: user.interfaceLanguageId
+  };
+}

@@ -2,6 +2,8 @@ import pg from 'pg';
 import moment from 'moment';
 import assert from 'assert';
 
+import * as helpers from './helpers';
+
 import configs from '../../db-config';
 
 // http://stackoverflow.com/a/7760578
@@ -254,11 +256,7 @@ export async function getAllData (userId, timestamp) {
     getAllFlashcardsAndRepetitions(userId, timestamp),
     getUserById(userId)
   ]).then(([flashcardsAndRepetitions, userData]) => Object.assign({}, flashcardsAndRepetitions, {
-    userSettings: {
-      dailyLimit: userData.dailyLimit,
-      name: userData.name,
-      interfaceLanguageId: userData.interfaceLanguageId
-    }
+    userSettings: helpers.getUserSettings(userData)
   }));
 }
 
