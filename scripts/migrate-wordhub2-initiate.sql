@@ -1,2 +1,0 @@
-DROP DATABASE wordhub2;
-CREATE DATABASE wordhub2;
