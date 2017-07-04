@@ -46,6 +46,8 @@ Requires nodejs >= 6.
 
 AWS Elastic Beanstalk is currently used for api.wordhub.io (the original production data server).
 
+Application is deployed using the CLI: `eb deploy` (refer to the [Elastic Beanstalk documentation](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3.html)).
+
 Here are the main parameters of the environment:
 * All work is unfortunately performed by the node server, including content gzipping. Some of it could be offloaded to a reverse proxy like nginx, but I have never used it before, and the traffic seems sufficiently low for now.
 * Load balanced, auto scaling
