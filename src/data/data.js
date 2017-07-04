@@ -32,6 +32,15 @@ function escape (str) {
   });
 }
 
+
+
+/*
+ * The following assertions are used for inserting different types
+ * of data into SQL queries. We first ensure the value is of the necessary type
+ * (to prevent any injections), and then return a string that can be safely
+ * inserted into the query.
+ * It is up to the calling to code how to handle exceptions thrown by `assert`.
+ */
 function integer (num) {
   assert.equal(typeof num, 'number');
   assert.equal(Math.floor(num), num);
@@ -46,7 +55,7 @@ function float (num) {
 function string (str) {
   assert.equal(typeof str, 'string');
   // We need the E before the string because only then
-  // are escaped characters treated as we expect them to.
+  // escaped characters are treated as we expect them to be.
   // https://www.postgresql.org/docs/9.6/static/sql-syntax-lexical.html
   return 'E\'' + escape(str) + '\'';
 }
@@ -67,6 +76,8 @@ function stringOrNull (str) {
     return 'NULL';
   }
 }
+
+
 
 function camelizeKeys (rows) {
   return rows.map(row => {

@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "export NODE_ENV=development; nodemon index",
+    "dev": "export NODE_ENV=development; ./node_modules/.bin/nodemon index",
     "lint": "./scripts/lint.sh",
     "prestart": "./node_modules/.bin/db-migrate up -e prod",
     "start": "node index",
