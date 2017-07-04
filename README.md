@@ -15,12 +15,14 @@ Only one client is currently available:
 * db-config.js: used for configuring the database in the app code (at startup) and tests.
 * database.json: same information, but in a format that the db-migrate utility understands.
 * nodemon.json: commands that should run at certain points of server’s lifecycle.
+* migrations/: JS and SQL code for migrating the database. There’s currently no schema file which would be really nice to add: both to see what the DB looks like and to not have to go through all migrations when setting up the dev and test databases.
+* scripts/: some supporting bash scripts.
 * index.js is the server’s entry point. It does the following things:
   * It loads environment variables from a .env file.
   * It requires `babel-register` so that all subsequent `require`d files are parsed with the Babel parser. Currently, it means transforming ES6 `import`s into `require`s, and async functions to generators.
   * It runs `createServer` defined in src/app.js.
 * src/app.js is responsible for creating the application itself (an express.js server) and setting up all routes.
-* src/routes: the directory containing controller code for all routes.
+* src/routes/: the directory containing controller code for all routes.
 * src/data/auth.js: authentication library.
 * src/data/data.js: all communication with database is handled here.
 
