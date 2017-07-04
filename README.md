@@ -2,7 +2,14 @@
 
 [Wordhub](https://wordhub.io) is an application for storing and managing flashcards.
 
+This is the third major version of the app. The source code for the [first](https://github.com/pomerantsev/wordhub) and [second](https://github.com/pomerantsev/wordhub_on_rails) version can also be found on Github.
+
 The data server and the clients are fully separated. This is the repository for the server code.
+
+Architectural improvements since V2:
+* Server is now client-independent. Thus multiple clients (e.g. web, mobile) can be implemented separately.
+* It is now possible for the application to work offline (if the client is properly implemented). Client may request the full list of user’s flashcards and repetitions and create and maintain a local copy, synchronizing it with the server’s master copy when network is available.
+* The notion of days is crucial to the app, and the time when one day ends and another one starts affects user experience. V2’s architecture only allowed date switching to happen simultaneously for all users, regardless of their timezone. The new database has separate fields for server timestamps and user-defined dates, which means that clients can refer to the latter for calculating flashcard creation / repetition dates.
 
 Only one client is currently available:
 
